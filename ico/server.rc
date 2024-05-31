@@ -1,0 +1,25 @@
+id ICON "server.ico"
+
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+  BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Roach Productions"
+      VALUE "FileDescription", "MZ Chess Server"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "MZChessServer"
+      VALUE "LegalCopyright", "Joan Vidal Buigues"
+      VALUE "OriginalFilename", "MZServer.exe"
+      VALUE "ProductName", "MZ Chess"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END

@@ -1,0 +1,40 @@
+-----------------------------------------------------------------------------------------------------
+- BUILD GAME
+-----------------------------------------------------------------------------------------------------
+BUILD RES FILE
+windres game.rc -O coff -o game.res
+
+CONSOLE BUILD
+g++ ./src/game.cpp ./src/game/*.cpp ./src/game/scene/*.cpp -o game.exe -Iinclude -Llib -lraylib -lgdi32 -lwinmm
+
+
+-----------------------------------------------------------------------------------------------------
+- BUILD SERVER
+-----------------------------------------------------------------------------------------------------
+BUILD RES FILE
+windres ./ico/server.rc -O coff -o ./ico/server.res
+
+CONSOLE BUILD
+g++ ./src/server.cpp ./src/server/*.cpp -o MZServer.exe -Iinclude sqlite3.dll -lWs2_32 ./ico/server.res
+
+
+-----------------------------------------------------------------------------------------------------
+- BUILD LAUNCHER
+-----------------------------------------------------------------------------------------------------
+
+BUILD RES FILE
+windres launcher.rc -O coff -o launcher.res
+
+CONSOLE
+g++ launcher.cpp ./src/*.cpp ./src/scene/*.cpp -o MZChessLauncher.exe -Iinclude -Llib -lraylib -lgdi32 -lwinmm -lwsock32 -lWs2_32
+
+NO_CONSOLE
+g++ "-Wl,-subsystem,windows" ./src/launcher.cpp ./src/launcher/*.cpp ./src/launcher/scene/*.cpp -o MZChessLauncher.exe -Iinclude -Llib -lraylib -lgdi32 -lwinmm -lWs2_32 ./ico/launcher.res
+
+
+-----------------------------------------------------------------------------------------------------
+- BUILD CLIENT
+-----------------------------------------------------------------------------------------------------
+
+CONSOLE BUILD
+g++ ./src/client.cpp -o client.exe -Iinclude -lWs2_32

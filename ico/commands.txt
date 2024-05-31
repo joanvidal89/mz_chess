@@ -1,0 +1,22 @@
+uci <- uciok
+
+setoption name UCI_LimitStrength value true
+setoption name UCI_Elo value *
+
+OR
+
+setoption name Skill Level value 0-20
+
+position startpos moves [array of moves]
+go depth *
+
+
+DRAGON
+
+uci
+setoption name Skill value 0
+isready
+
+RODENT
+
+setoption name UCI_Elo value 800
