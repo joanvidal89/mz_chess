@@ -138,7 +138,6 @@ void MZRenderVS::drawOpponent(const UIOpponent &btn, ButtonState state)
     case BS_CLICK:
         DrawTextureNPatch(texArcadeUI, opponent_click, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
         DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
-
         break;
     default:
         break;
@@ -199,27 +198,53 @@ void MZRenderVS::drawButton(const UIButton &btn, ButtonState state)
 
 void MZRenderVS::drawGameButton(const GameButton &btn)
 {
-    switch (btn.state)
+    if (btn.id == 1)
     {
-    case BS_ENABLED:
-        DrawTextureNPatch(texArcadeUI, button_base, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
-        DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
-        break;
-    case BS_DISABLED:
-        DrawTextureNPatch(texArcadeUI, button_base, btn.drawRect, Vector2{0, 0}, 0.0f, DARKGRAY);
-        DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, DARKGRAY);
-        break;
-    case BS_HOVER:
-        DrawTextureNPatch(texArcadeUI, button_hover, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
-        DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
-        break;
-    case BS_CLICK:
-        DrawTextureNPatch(texArcadeUI, button_click, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
-        DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
-
-        break;
-    default:
-        break;
+        switch (btn.state)
+        {
+        case BS_ENABLED:
+            DrawTextureNPatch(texArcadeUI, opponent_base, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        case BS_DISABLED:
+            DrawTextureNPatch(texArcadeUI, opponent_base, btn.drawRect, Vector2{0, 0}, 0.0f, DARKGRAY);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, DARKGRAY);
+            break;
+        case BS_HOVER:
+            DrawTextureNPatch(texArcadeUI, opponent_hover, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        case BS_CLICK:
+            DrawTextureNPatch(texArcadeUI, opponent_click, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch (btn.state)
+        {
+        case BS_ENABLED:
+            DrawTextureNPatch(texArcadeUI, gamebtn_enabled, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        case BS_DISABLED:
+            DrawTextureNPatch(texArcadeUI, gamebtn_disabled, btn.drawRect, Vector2{0, 0}, 0.0f, DARKGRAY);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, DARKGRAY);
+            break;
+        case BS_HOVER:
+            DrawTextureNPatch(texArcadeUI, gamebtn_hover, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        case BS_CLICK:
+            DrawTextureNPatch(texArcadeUI, gamebtn_click, btn.drawRect, Vector2{0, 0}, 0.0f, WHITE);
+            DrawTextureRec(texArcadeUI, btn.iconRect, btn.iconOffset, WHITE);
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -264,49 +289,68 @@ void MZRenderVS::drawCell(const Cell &cell)
     switch (cell.cellState)
     {
     case CS_DISABLED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height,
-                      cell.cellColor == CC_WHITE ? DARKGRAY : BLACK);
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_DIS_WHITE : C_DIS_BLACK);
         break;
-    case CS_ENABLED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height,
-                      cell.cellColor == CC_WHITE ? GRAY : DARKGRAY);
+    case CS_HOVER_DISABLED:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_DIS_WHITE : C_DIS_BLACK);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_SELECTABLE:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_SEL_WHITE : C_SEL_BLACK);
+        DrawTextureRec(texArcadeUI, cell_selectable, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_HOVER_SELECTABLE:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_SEL_WHITE : C_SEL_BLACK);
+        DrawTextureRec(texArcadeUI, cell_selectable, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
         break;
     case CS_SELECTED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height, WHITE);
-        DrawTextureRec(texArcadeUI, cell_selected,
-                       Vector2{cell.drawRect.x, cell.drawRect.y}, GRAY);
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_WHITE : C_BLACK);
+        DrawTextureRec(texArcadeUI, cell_selected, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_HOVER_SELECTED:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_WHITE : C_BLACK);
+        DrawTextureRec(texArcadeUI, cell_selected, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_CHECK:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_ATK_WHITE : C_ATK_BLACK);
+        DrawTextureRec(texArcadeUI, cell_attack, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_HOVER_CHECK:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_ATK_WHITE : C_ATK_BLACK);
+        DrawTextureRec(texArcadeUI, cell_attack, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
         break;
     case CS_ATTACKED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height, MAROON);
-        break;
-    case CS_MOVABLE:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height, BLUE);
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_ATK_WHITE : C_ATK_BLACK);
+        DrawTextureRec(texArcadeUI, cell_attack, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
         break;
     case CS_HOVER_ATTACKED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height, MAROON);
-        DrawTextureRec(texArcadeUI, cell_hover,
-                       Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_ATK_WHITE : C_ATK_BLACK);
+        DrawTextureRec(texArcadeUI, cell_attack, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        break;
+    case CS_MOVABLE:
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_MOV_WHITE : C_MOV_BLACK);
+        DrawTextureRec(texArcadeUI, cell_move, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
         break;
     case CS_HOVER_MOVABLE:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height, BLUE);
-        DrawTextureRec(texArcadeUI, cell_hover,
-                       Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
-        break;
-    case CS_HOVER_ENABLED:
-        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width,
-                      cell.drawRect.height,
-                      (cell.pieceColor == CC_WHITE && !cell.pieceMoves.empty()) ? LIGHTGRAY
-                      : cell.cellColor == CC_WHITE                              ? GRAY
-                                                                                : DARKGRAY);
-        DrawTextureRec(texArcadeUI, cell_hover,
-                       Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawRectangle(cell.drawRect.x, cell.drawRect.y, cell.drawRect.width, cell.drawRect.height,
+                      cell.cellColor == CC_WHITE ? C_MOV_WHITE : C_MOV_BLACK);
+        DrawTextureRec(texArcadeUI, cell_move, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
+        DrawTextureRec(texArcadeUI, cell_hover, Vector2{cell.drawRect.x, cell.drawRect.y}, WHITE);
         break;
     default:
         break;

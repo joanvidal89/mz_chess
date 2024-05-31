@@ -53,11 +53,7 @@ private:
     HANDLE pipeinRead = NULL;
     HANDLE pipeoutWrite = NULL;
     HANDLE pipeoutRead = NULL;
-
-    BYTE buffer[2048];
-
-    DWORD read, write, exit_code, available;
-
+    
     std::future<std::string> nextMove;
     LPSTR fileName = const_cast<LPSTR>("dragon.exe");
 };

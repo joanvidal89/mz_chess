@@ -44,10 +44,13 @@ private:
 
     Rectangle GAME_PANEL = Rectangle{492, 400, 96, 280};
 
-
-    UIButton promoteButtons[4];
-
-    GameButton BTN_BACK = {1, Rectangle{302, 2, 42, 42}, Rectangle{516, 622, 48, 46}, Vector2{519, 623}, BS_DISABLED};
+    GameButton gameButtons[5] = {
+        GameButton{1, Rectangle{302, 2, 42, 42}, Rectangle{516, 622, 48, 46}, Vector2{519, 623}, BS_DISABLED},
+        GameButton{2, Rectangle{130, 214, 32, 32}, Rectangle{507, 551, 32, 32}, Vector2{507, 551}, BS_DISABLED},
+        GameButton{3, Rectangle{166, 214, 32, 32}, Rectangle{541, 551, 32, 32}, Vector2{541, 551}, BS_DISABLED},
+        GameButton{4, Rectangle{202, 214, 32, 32}, Rectangle{507, 584, 32, 32}, Vector2{507, 584}, BS_DISABLED},
+        GameButton{5, Rectangle{238, 214, 32, 32}, Rectangle{541, 584, 32, 32}, Vector2{541, 584}, BS_DISABLED},
+    };
 
     void ssInit();
     void ssOut();
@@ -59,6 +62,9 @@ private:
     void ssPlayerAnimation();
     void ssAIAnimation();
     void drawDefaultRender();
+
+    void checkButtonClick();
+    void performButtonClick(PieceState state);
 };
 
 #endif

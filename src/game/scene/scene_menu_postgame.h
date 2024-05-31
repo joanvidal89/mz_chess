@@ -66,23 +66,11 @@ private:
 
     const UIButton BTN_PLAY_WHITE = {1,
                                      Rectangle{318, 94, 32, 32},
-                                     Rectangle{8, 64, 64, 32},
-                                     Rectangle{PANEL_OFFSET.x + 8, PANEL_OFFSET.y + 64, 64, 32},
+                                     Rectangle{8, 128, 64, 32},
+                                     Rectangle{PANEL_OFFSET.x + 8, PANEL_OFFSET.y + 128, 64, 32},
                                      Vector2{8, 64},
-                                     "PLAY"};
-    const UIButton BTN_PLAY_BLACK = {2,
-                                     Rectangle{354, 94, 32, 32},
-                                     Rectangle{8, 96, 64, 32},
-                                     Rectangle{PANEL_OFFSET.x + 8, PANEL_OFFSET.y + 96, 64, 32},
-                                     Vector2{8, 96},
-                                     "+500"};
-    const UIButton BTN_BACK = {3,
-                               Rectangle{390, 94, 32, 32},
-                               Rectangle{8, 128, 64, 32},
-                               Rectangle{PANEL_OFFSET.x + 8, PANEL_OFFSET.y + 128, 64, 32},
-                               Vector2{8, 128},
-                               "BACK"};
-    const UIButton PLAY_BTNS[4] = {BTN_PLAY_WHITE, BTN_PLAY_BLACK, BTN_BACK};
+                                     "BACK"};
+    const UIButton PLAY_BTNS[4] = {BTN_PLAY_WHITE};
 
     int id;
     Rectangle iconRect;

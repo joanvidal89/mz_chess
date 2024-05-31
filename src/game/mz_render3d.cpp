@@ -101,15 +101,8 @@ void MZRender3D::drawPiece(const Cell &cell, float opacity)
     case CS_SELECTED:
         DrawModelEx(*outline, {cell.drawModel.x, 0.0f, cell.drawModel.y}, {0}, 0, {1.0f, 1.0f, 1.0f}, ColorAlpha(WHITE, opacity));
         break;
-    case CS_HOVER_ENABLED:
-        if (cell.pieceColor == CC_WHITE && !cell.pieceMoves.empty())
-        {
-            DrawModelEx(*outline, {cell.drawModel.x, 0.0f, cell.drawModel.y}, {0}, 0, {1.0f, 1.0f, 1.0f}, ColorAlpha(SKYBLUE, opacity));
-        }
-        else
-        {
-            DrawModelEx(*outline, {cell.drawModel.x, 0.0f, cell.drawModel.y}, {0}, 0, {1.0f, 1.0f, 1.0f}, ColorAlpha(BLACK, opacity));
-        }
+    case CS_HOVER_SELECTABLE:
+        DrawModelEx(*outline, {cell.drawModel.x, 0.0f, cell.drawModel.y}, {0}, 0, {1.0f, 1.0f, 1.0f}, ColorAlpha(SKYBLUE, opacity));
         break;
     case CS_HOVER_ATTACKED:
         DrawModelEx(*outline, {cell.drawModel.x, 0.0f, cell.drawModel.y}, {0}, 0, {1.0f, 1.0f, 1.0f}, ColorAlpha(RED, opacity));

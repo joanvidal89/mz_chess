@@ -77,7 +77,7 @@ std::string MZUciEngine::initialize()
 {
 
     DWORD write, read, available, exitCode;
-    char buffer[512];
+    char buffer[1024];
     std::string outputBuffer;
     std::string out;
 
@@ -137,7 +137,7 @@ void MZUciEngine::startFindBestMove()
 std::string MZUciEngine::findBestMove()
 {
     DWORD write, read, available, exitCode;
-    char buffer[512];
+    char buffer[2048];
     std::string outputBuffer;
     std::string out;
     std::string bestMove;

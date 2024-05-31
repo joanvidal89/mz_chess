@@ -10,6 +10,7 @@ MZUciEngine::MZUciEngine()
 
 MZUciEngine::~MZUciEngine()
 {
+    DWORD write;
     WriteFile(pipeinWrite, "quit\n", 5, &write, NULL);
 
     if (pipeinWrite != NULL)
@@ -24,12 +25,6 @@ MZUciEngine::~MZUciEngine()
         CloseHandle(processInformation.hProcess);
     if (processInformation.hThread != NULL)
         CloseHandle(processInformation.hThread);
-
-    free(fileName);
-    free(pipeinWrite);
-    free(pipeinRead);
-    free(pipeoutWrite);
-    free(pipeoutRead);
 }
 
 void MZUciEngine::launchProcess()
@@ -64,8 +59,8 @@ void MZUciEngine::launchProcess()
     };
 
     // CLOSE UNNECESARY HANDLES
-    CloseHandle(pipeinRead);
-    CloseHandle(pipeoutWrite);
+    // CloseHandle(pipeinRead);
+    // CloseHandle(pipeoutWrite);
 }
 
 void MZUciEngine::startInitialize()
@@ -75,8 +70,7 @@ void MZUciEngine::startInitialize()
 
 std::string MZUciEngine::initialize()
 {
-
-    DWORD write, read, available, exitCode;
+    DWORD write, read;
     char buffer[1024];
     std::string outputBuffer;
     std::string out;
@@ -136,7 +130,7 @@ void MZUciEngine::startFindBestMove()
 
 std::string MZUciEngine::findBestMove()
 {
-    DWORD write, read, available, exitCode;
+    DWORD write, read;
     char buffer[2048];
     std::string outputBuffer;
     std::string out;

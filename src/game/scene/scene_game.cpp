@@ -168,6 +168,10 @@ void SceneGame::ssOut()
 
 void SceneGame::ssAwaitMoves()
 {
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
     // Draw Render
     //--------------------------------------------------------------------------------------
     drawDefaultRender();
@@ -178,7 +182,9 @@ void SceneGame::ssAwaitMoves()
     {
         printf("CURRENT STATE = SS_PLAYER_TURN\n");
         currentState = SS_PLAYER_TURN;
-        director->board->setAllCellsState(CS_ENABLED);
+        director->board->setAllCellsState(CS_DISABLED);
+        director->board->markCheckCells();
+        gameButtons[0].state = BS_ENABLED;
 
         // CHECK LOSS - NO AVAIABLE MOVES
         if (director->board->checkLoss())
@@ -191,140 +197,40 @@ void SceneGame::ssAwaitMoves()
     }
 }
 
-void SceneGame::ssAwaitAI()
-{
-    // Draw Render
-    //--------------------------------------------------------------------------------------
-    drawDefaultRender();
-
-    // Handle Response
-    //--------------------------------------------------------------------------------------
-    if (director->uciEngine->isReadyBestMove())
-    {
-        std::string response = director->uciEngine->getBestMoveResponse();
-        printf("MOVE RESPONSE: %s\n", response.c_str());
-
-        // HANDLE AI LOSS
-        if (response.find("none") != std::string::npos)
-        {
-            director->audio->playVictorySound();
-            futureScene = ST_MENU_POSTGAME;
-            printf("CURRENT STATE = SS_OUT\n");
-            currentState = SS_OUT;
-            deltaTime = 0.0f;
-        }
-        else
-        {
-            // DEBUG: I CAN OVERRIDE AI RESPONSE
-            // std::getline(std::cin, response);
-
-            director->uciEngine->moves.push_back(response.substr(0, 4));
-
-            currentAIMove = PieceMove{BoardPosition{response[0] - 'a', response[1] - '1'},
-                                      BoardPosition{response[2] - 'a', response[3] - '1'}, MT_MOVE};
-
-            Cell *origin = &director->board->getBoardCell(currentAIMove.origin);
-            Cell *target = &director->board->getBoardCell(currentAIMove.target);
-
-            origin->pieceState = PS_MOVE;
-
-            // CHECK FOR PAWN DOUBLE MOVE
-            if (origin->pieceType == PT_PAWN && origin->position.rank == target->position.rank + 2)
-            {
-                currentAIMove.type = MT_DOUBLEMOVE;
-            }
-
-            // CHECK FOR AI ATTACK
-            if (target->pieceColor == CC_WHITE)
-            {
-                target->pieceState = PS_DIE;
-                currentAIMove.type = MT_ATTACK;
-            }
-
-            // CHECK FOR AI EN PASSANT ATTACK
-            if (origin->pieceType == PT_PAWN && origin->position.file != target->position.file && target->pieceColor == CC_NONE)
-            {
-                director->board->getBoardCell(BoardPosition{target->position.file, target->position.rank + 1}).pieceState = PS_DIE;
-                currentAIMove.type = MT_ENPASSANT;
-            }
-
-            // CHECK FOR AI PROMOTION
-            if (origin->pieceType == PT_PAWN && target->position.rank == 0)
-            {
-                if (currentAIMove.type == MT_ATTACK)
-                {
-                    currentAIMove.type = MT_ATTACKPROMOTE;
-                }
-                else
-                {
-                    currentAIMove.type = MT_PROMOTE;
-                }
-                char promotion = response[4];
-                switch (promotion)
-                {
-                case 'r':
-                    origin->pieceState = PS_PROMOTE_ROOK;
-                    break;
-                case 'n':
-                    origin->pieceState = PS_PROMOTE_KNIGHT;
-                    break;
-                case 'b':
-                    origin->pieceState = PS_PROMOTE_BISHOP;
-                    break;
-                case 'q':
-                    origin->pieceState = PS_PROMOTE_QUEEN;
-                    break;
-                default:
-                    break;
-                }
-            }
-
-            // CHECK FOR CASTLES
-            if (origin->pieceType == PT_KING)
-            {
-                // CHECK FOR LONG CASTLE
-                if (origin->position.file == 4 && origin->position.rank == 7 && target->position.file == 2 && target->position.rank == 7)
-                {
-                    currentAIMove.type = MT_LONG_CASTLE;
-                    director->board->getBoardCell(BoardPosition{0, 7}).pieceState = PS_CASTLE_LONG;
-                }
-                // CHECK FOR SHORT CASTLE
-                else if (origin->position.file == 4 && origin->position.rank == 7 && target->position.file == 6 && target->position.rank == 7)
-                {
-                    currentAIMove.type = MT_SHORT_CASTLE;
-                    director->board->getBoardCell(BoardPosition{7, 7}).pieceState = PS_CASTLE_SHORT;
-                }
-            }
-
-            printf("CURRENT STATE = SS_AI_ANIM_START\n");
-            currentState = SS_AI_ANIM_START;
-        }
-    }
-}
-
 void SceneGame::ssPlayerTurn()
 {
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
     // Handle Input
     //--------------------------------------------------------------------------------------
     director->input->raycastBotScreen(director->composite->getFinalCamera());
 
-    // Handle Back Button
+    // Handle Buttons
     //--------------------------------------------------------------------------------------
-    if (director->input->isVirtualCursorOnRect(BTN_BACK.drawRect))
-        BTN_BACK.state = BS_HOVER;
-    else
-        BTN_BACK.state = BS_ENABLED;
 
-    if (director->input->getMouseButtonDown() == 1 && BTN_BACK.state == BS_HOVER)
+    for (GameButton &btn : gameButtons)
     {
-        director->audio->playCancelSound();
-        futureScene = ST_MENU_POSTGAME;
-        printf("CURRENT STATE = SS_OUT\n");
-        currentState = SS_OUT;
-        deltaTime = 0.0f;
+        if (director->input->isVirtualCursorOnRect(btn.drawRect))
+        {
+            if (btn.state == BS_ENABLED)
+            {
+                btn.state = BS_HOVER;
+            }
+        }
+        else if (btn.state != BS_DISABLED)
+        {
+            btn.state = BS_ENABLED;
+        }
     }
 
-    // Handle Cell Selection
+    if (director->input->getMouseButtonDown() == 1)
+    {
+        checkButtonClick();
+    }
+
+    // HANDLE CELL SELECTION IF NO CELL IS SELECTED
     //--------------------------------------------------------------------------------------
     if (currentSelectedCell == nullptr)
     {
@@ -332,7 +238,18 @@ void SceneGame::ssPlayerTurn()
         //--------------------------------------------------------------------------------------
         if (currentHoverCell != nullptr)
         {
-            currentHoverCell->cellState = CS_ENABLED;
+            switch (currentHoverCell->cellState)
+            {
+            case CS_HOVER_CHECK:
+                currentHoverCell->cellState = CS_CHECK;
+                break;
+            case CS_HOVER_SELECTABLE:
+                currentHoverCell->cellState = CS_SELECTABLE;
+                break;
+            default:
+                currentHoverCell->cellState = CS_DISABLED;
+                break;
+            }
             lastHoverCell = currentHoverCell;
             currentHoverCell = nullptr;
         }
@@ -344,7 +261,19 @@ void SceneGame::ssPlayerTurn()
             if (director->input->isVirtualCursorOnRect(c.drawRect))
             {
                 currentHoverCell = &c;
-                c.cellState = CS_HOVER_ENABLED;
+                switch (currentHoverCell->cellState)
+                {
+                case CS_CHECK:
+                    currentHoverCell->cellState = CS_HOVER_CHECK;
+                    break;
+                case CS_SELECTABLE:
+                    currentHoverCell->cellState = CS_HOVER_SELECTABLE;
+                    break;
+                default:
+                    currentHoverCell->cellState = CS_HOVER_DISABLED;
+                    break;
+                }
+
                 if (c.pieceColor == CC_WHITE && !c.pieceMoves.empty() && ((lastHoverCell == nullptr) || (lastHoverCell != currentHoverCell)))
                 {
                     director->audio->playHoverSound();
@@ -368,6 +297,7 @@ void SceneGame::ssPlayerTurn()
                 {
                 case MT_ATTACK:
                 case MT_ATTACKPROMOTE:
+                case MT_ENPASSANT:
                     director->board->setCellState(pm.target, CS_ATTACKED);
                     break;
                 default:
@@ -378,7 +308,8 @@ void SceneGame::ssPlayerTurn()
             currentHoverCell = nullptr;
         }
     }
-    // Handle Move Selection
+
+    // HANDLE MOVE SELECTION
     //--------------------------------------------------------------------------------------
     else
     {
@@ -393,6 +324,10 @@ void SceneGame::ssPlayerTurn()
                 break;
             case CS_HOVER_ATTACKED:
                 currentHoverCell->cellState = CS_ATTACKED;
+                break;
+            case CS_SELECTED:
+                currentHoverCell->cellState = CS_HOVER_SELECTED;
+                break;
             default:
                 break;
             }
@@ -418,6 +353,10 @@ void SceneGame::ssPlayerTurn()
                     break;
                 case CS_ATTACKED:
                     c.cellState = CS_HOVER_ATTACKED;
+                    break;
+                case CS_SELECTED:
+                    c.cellState = CS_HOVER_SELECTED;
+                    break;
                 default:
                     break;
                 }
@@ -429,56 +368,76 @@ void SceneGame::ssPlayerTurn()
             }
         }
 
-        // Check Input
+        // HANDLE CLICK ON CELL WHILE PIECE IS SELECTED
         //--------------------------------------------------------------------------------------
         if (director->input->getMouseButtonDown() == 1 && currentHoverCell != nullptr)
         {
-            director->audio->playAcceptSound();
-
-            currentSelectedCell->pieceState = PS_MOVE;
-            switch (currentPieceMove->type)
+            if (currentHoverCell->cellState == CS_HOVER_SELECTED)
             {
-            case MT_ATTACK:
-                director->board->getBoardCell(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank}).pieceState = PS_DIE;
-                break;
-            case MT_ATTACKPROMOTE:
-                currentSelectedCell->pieceState = PS_PROMOTE;
-                director->board->getBoardCell(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank}).pieceState = PS_DIE;
-                break;
-            case MT_SHORT_CASTLE:
-                director->board->getBoardCell(BoardPosition{7, 0}).pieceState = PS_CASTLE_SHORT;
-                break;
-            case MT_LONG_CASTLE:
-                director->board->getBoardCell(BoardPosition{0, 0}).pieceState = PS_CASTLE_LONG;
-                break;
-            case MT_PROMOTE:
-                currentSelectedCell->pieceState = PS_PROMOTE;
-                break;
-            default:
-                break;
-            }
-
-            director->board->setAllCellsState(CS_DISABLED);
-
-            if (currentSelectedCell->pieceState == PS_PROMOTE)
-            {
-                director->board->setCellState(currentSelectedCell->position, CS_SELECTED);
-                printf("CURRENT STATE = SS_PLAYER_TURN_PROMOTE\n");
-                currentState = SS_PLAYER_TURN_PROMOTE;
-
-                // TODO - DELETE THIS LINE
-                deltaTime = 0.0f;
+                director->audio->playCancelSound();
+                director->board->setAllCellsState(CS_DISABLED);
+                director->board->markCheckCells();
+                currentSelectedCell = nullptr;
+                currentPieceMove = nullptr;
             }
             else
             {
-                printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
-                currentState = SS_PLAYER_ANIM_START;
+                director->audio->playAcceptSound();
+
+                currentSelectedCell->pieceState = PS_MOVE;
+                switch (currentPieceMove->type)
+                {
+                case MT_ATTACK:
+                    director->board->getBoardCell(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank}).pieceState = PS_DIE;
+                    break;
+                case MT_ATTACKPROMOTE:
+                    currentSelectedCell->pieceState = PS_PROMOTE;
+                    director->board->getBoardCell(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank}).pieceState = PS_DIE;
+                    break;
+                case MT_SHORT_CASTLE:
+                    director->board->getBoardCell(BoardPosition{7, 0}).pieceState = PS_CASTLE_SHORT;
+                    break;
+                case MT_LONG_CASTLE:
+                    director->board->getBoardCell(BoardPosition{0, 0}).pieceState = PS_CASTLE_LONG;
+                    break;
+                case MT_PROMOTE:
+                    currentSelectedCell->pieceState = PS_PROMOTE;
+                    break;
+                case MT_ENPASSANT:
+                    director->board->getBoardCell(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank - 1}).pieceState = PS_DIE;
+                    break;
+                default:
+                    break;
+                }
+
+                director->board->setAllCellsState(CS_DISABLED);
+
+                if (currentSelectedCell->pieceState == PS_PROMOTE)
+                {
+                    director->board->setCellState(currentSelectedCell->position, CS_SELECTED);
+                    director->board->setCellState(currentPieceMove->target, CS_ATTACKED);
+                    printf("CURRENT STATE = SS_PLAYER_TURN_PROMOTE\n");
+                    gameButtons[1].state = BS_ENABLED;
+                    gameButtons[2].state = BS_ENABLED;
+                    gameButtons[3].state = BS_ENABLED;
+                    gameButtons[4].state = BS_ENABLED;
+                    currentState = SS_PLAYER_TURN_PROMOTE;
+
+                    // TODO - DELETE THIS LINE
+                    deltaTime = 0.0f;
+                }
+                else
+                {
+                    printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
+                    currentState = SS_PLAYER_ANIM_START;
+                }
             }
         }
         else if (director->input->getMouseButtonDown() == 2)
         {
             director->audio->playCancelSound();
-            director->board->setAllCellsState(CS_ENABLED);
+            director->board->setAllCellsState(CS_DISABLED);
+            director->board->markCheckCells();
             currentSelectedCell = nullptr;
             currentPieceMove = nullptr;
         }
@@ -490,69 +449,46 @@ void SceneGame::ssPlayerTurn()
 
 void SceneGame::ssPlayerTurnPromote()
 {
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
     // Handle Input
     //--------------------------------------------------------------------------------------
     director->input->raycastBotScreen(director->composite->getFinalCamera());
 
-    // Draw 2D
+    // Handle Buttons
     //--------------------------------------------------------------------------------------
-    director->renderVS->beginRT();
-    for (UIButton opt : optionButtons)
-    {
-        director->renderVS->drawOption(opt, BS_DISABLED);
-    }
-    for (Cell c : director->board->getBoardCells())
-    {
-        director->renderVS->drawCell(c);
-    }
 
-    //TODO INTERFACE
-
-    director->renderVS->drawGameButton(BTN_BACK);
-    director->renderVS->endRT();
-
-    // Draw 3D
-    //--------------------------------------------------------------------------------------
-    director->composite->beginRT();
-    director->composite->beginMode3D();
-    director->render3D->drawArcade();
-    for (Cell c : director->board->getBoardCells())
+    for (GameButton &btn : gameButtons)
     {
-        if (c.pieceType != PT_NONE)
+        if (director->input->isVirtualCursorOnRect(btn.drawRect))
         {
-            director->render3D->drawPieceReflection(c, 1.0f);
+            if (btn.state == BS_ENABLED)
+            {
+                btn.state = BS_HOVER;
+            }
+        }
+        else if (btn.state != BS_DISABLED)
+        {
+            btn.state = BS_ENABLED;
         }
     }
-    director->renderVS->drawArcadeVS();
-    for (Cell c : director->board->getBoardCells())
-    {
-        if (c.pieceType != PT_NONE)
-        {
-            director->render3D->drawPiece(c, 1.0f);
-        }
-    }
-    director->composite->endMode3D();
-    director->composite->drawCursor();
-    director->composite->endRT();
 
-    // Draw Composite
-    //--------------------------------------------------------------------------------------
-    director->composite->beginDrawing();
-    director->composite->drawComposite();
-    director->composite->endDrawing();
-
-    if (deltaTime > 0.5f)
+    if (director->input->getMouseButtonDown() == 1)
     {
-        // HANDLE SELECTION
-        currentSelectedCell->cellState = CS_DISABLED;
-        currentSelectedCell->pieceState = PS_PROMOTE_QUEEN;
-        printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
-        currentState = SS_PLAYER_ANIM_START;
+        checkButtonClick();
     }
+
+    drawDefaultRender();
 }
 
 void SceneGame::ssPlayerAnimation()
 {
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
     // Draw 2D
     //--------------------------------------------------------------------------------------
     director->renderVS->beginRT();
@@ -563,7 +499,6 @@ void SceneGame::ssPlayerAnimation()
 
     // TODO INTERFACE
 
-    director->renderVS->drawGameButton(BTN_BACK);
     director->renderVS->endRT();
 
     // Draw 3D
@@ -758,8 +693,127 @@ void SceneGame::ssPlayerAnimation()
     }
 }
 
+void SceneGame::ssAwaitAI()
+{
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
+    // Draw Render
+    //--------------------------------------------------------------------------------------
+    drawDefaultRender();
+
+    // Handle Response
+    //--------------------------------------------------------------------------------------
+    if (director->uciEngine->isReadyBestMove())
+    {
+        std::string response = director->uciEngine->getBestMoveResponse();
+        printf("MOVE RESPONSE: %s\n", response.c_str());
+
+        // HANDLE AI LOSS
+        if (response.find("none") != std::string::npos)
+        {
+            director->audio->playVictorySound();
+            futureScene = ST_MENU_POSTGAME;
+            printf("CURRENT STATE = SS_OUT\n");
+            currentState = SS_OUT;
+            deltaTime = 0.0f;
+        }
+        else
+        {
+            // DEBUG: I CAN OVERRIDE AI RESPONSE
+            // std::getline(std::cin, response);
+
+            director->uciEngine->moves.push_back(response.substr(0, 4));
+
+            currentAIMove = PieceMove{BoardPosition{response[0] - 'a', response[1] - '1'},
+                                      BoardPosition{response[2] - 'a', response[3] - '1'}, MT_MOVE};
+
+            Cell *origin = &director->board->getBoardCell(currentAIMove.origin);
+            Cell *target = &director->board->getBoardCell(currentAIMove.target);
+
+            origin->pieceState = PS_MOVE;
+
+            // CHECK FOR PAWN DOUBLE MOVE
+            if (origin->pieceType == PT_PAWN && origin->position.rank == target->position.rank + 2)
+            {
+                currentAIMove.type = MT_DOUBLEMOVE;
+            }
+
+            // CHECK FOR AI ATTACK
+            if (target->pieceColor == CC_WHITE)
+            {
+                target->pieceState = PS_DIE;
+                currentAIMove.type = MT_ATTACK;
+            }
+
+            // CHECK FOR AI EN PASSANT ATTACK
+            if (origin->pieceType == PT_PAWN && origin->position.file != target->position.file && target->pieceColor == CC_NONE)
+            {
+                director->board->getBoardCell(BoardPosition{target->position.file, target->position.rank + 1}).pieceState = PS_DIE;
+                currentAIMove.type = MT_ENPASSANT;
+            }
+
+            // CHECK FOR AI PROMOTION
+            if (origin->pieceType == PT_PAWN && target->position.rank == 0)
+            {
+                if (currentAIMove.type == MT_ATTACK)
+                {
+                    currentAIMove.type = MT_ATTACKPROMOTE;
+                }
+                else
+                {
+                    currentAIMove.type = MT_PROMOTE;
+                }
+                char promotion = response[4];
+                switch (promotion)
+                {
+                case 'r':
+                    origin->pieceState = PS_PROMOTE_ROOK;
+                    break;
+                case 'n':
+                    origin->pieceState = PS_PROMOTE_KNIGHT;
+                    break;
+                case 'b':
+                    origin->pieceState = PS_PROMOTE_BISHOP;
+                    break;
+                case 'q':
+                    origin->pieceState = PS_PROMOTE_QUEEN;
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            // CHECK FOR CASTLES
+            if (origin->pieceType == PT_KING)
+            {
+                // CHECK FOR LONG CASTLE
+                if (origin->position.file == 4 && origin->position.rank == 7 && target->position.file == 2 && target->position.rank == 7)
+                {
+                    currentAIMove.type = MT_LONG_CASTLE;
+                    director->board->getBoardCell(BoardPosition{0, 7}).pieceState = PS_CASTLE_LONG;
+                }
+                // CHECK FOR SHORT CASTLE
+                else if (origin->position.file == 4 && origin->position.rank == 7 && target->position.file == 6 && target->position.rank == 7)
+                {
+                    currentAIMove.type = MT_SHORT_CASTLE;
+                    director->board->getBoardCell(BoardPosition{7, 7}).pieceState = PS_CASTLE_SHORT;
+                }
+            }
+
+            printf("CURRENT STATE = SS_AI_ANIM_START\n");
+            currentState = SS_AI_ANIM_START;
+        }
+    }
+}
+
 void SceneGame::ssAIAnimation()
 {
+    // Update Camera
+    //--------------------------------------------------------------------------------------
+    director->composite->updateFinalCamDampen();
+
     // Draw 2D
     //--------------------------------------------------------------------------------------
     director->renderVS->beginRT();
@@ -768,10 +822,8 @@ void SceneGame::ssAIAnimation()
         director->renderVS->drawCell(c);
     }
 
+    // TODO INTERFACE
 
-    //TODO INTERFACE
-
-    director->renderVS->drawGameButton(BTN_BACK);
     director->renderVS->endRT();
 
     // Draw 3D
@@ -951,6 +1003,9 @@ void SceneGame::ssAIAnimation()
         currentSelectedCell = nullptr;
         currentPieceMove = nullptr;
         currentAIMove = {0};
+
+        //TODO DELETE THIS LINE
+        printf("SCORE: ", director->board->calculateScore());
     }
 }
 
@@ -963,6 +1018,7 @@ void SceneGame::drawDefaultRender()
     {
         director->renderVS->drawOption(opt, BS_DISABLED);
     }
+
     for (Cell c : director->board->getBoardCells())
     {
         director->renderVS->drawCell(c);
@@ -970,13 +1026,16 @@ void SceneGame::drawDefaultRender()
 
     director->renderVS->drawGamePanel(GAME_PANEL);
 
-    director->renderVS->drawMonoText(Vector2{520, 426}, director->board->getFullTurn().c_str(), 12, 1.0f);
-    director->renderVS->drawMonoText(Vector2{508, 455}, director->board->getPlayerTime().c_str(), 12, 1.0f);
-    director->renderVS->drawMonoText(Vector2{504, 496}, "00000", 12, 4.0f);
-    director->renderVS->drawMonoText(Vector2{504, 512}, "00000", 12, 4.0f);
-    director->renderVS->drawMonoText(Vector2{500, 540}, director->board->getPlayerScore().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{526, 430}, director->board->getFullTurn().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{518, 446}, director->board->getPlayerTime().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{510, 496}, "00000", 12, 5.0f);
+    director->renderVS->drawMonoText(Vector2{510, 524}, "00000", 12, 5.0f);
 
-    director->renderVS->drawGameButton(BTN_BACK);
+    for (GameButton btn : gameButtons)
+    {
+        director->renderVS->drawGameButton(btn);
+    }
+
     director->renderVS->endRT();
 
     // Draw 3D
@@ -1008,4 +1067,55 @@ void SceneGame::drawDefaultRender()
     director->composite->beginDrawing();
     director->composite->drawComposite();
     director->composite->endDrawing();
+}
+
+void SceneGame::checkButtonClick()
+{
+    int id = -1;
+
+    for (GameButton &btn : gameButtons)
+    {
+        if (btn.state == BS_HOVER)
+        {
+            btn.state = BS_CLICK;
+            id = btn.id;
+        }
+    }
+
+    switch (id)
+    {
+    case 1:
+        director->audio->playCancelSound();
+        futureScene = ST_MENU_POSTGAME;
+        printf("CURRENT STATE = SS_OUT\n");
+        currentState = SS_OUT;
+        deltaTime = 0.0f;
+        break;
+    case 2:
+        performButtonClick(PS_PROMOTE_KNIGHT);
+        break;
+    case 3:
+        performButtonClick(PS_PROMOTE_BISHOP);
+        break;
+    case 4:
+        performButtonClick(PS_PROMOTE_ROOK);
+        break;
+    case 5:
+        performButtonClick(PS_PROMOTE_QUEEN);
+        break;
+    default:
+        break;
+    }
+}
+
+void SceneGame::performButtonClick(PieceState state)
+{
+    director->board->setAllCellsState(CS_DISABLED);
+    currentSelectedCell->pieceState = state;
+    printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
+    currentState = SS_PLAYER_ANIM_START;
+    gameButtons[1].state = BS_DISABLED;
+    gameButtons[2].state = BS_DISABLED;
+    gameButtons[3].state = BS_DISABLED;
+    gameButtons[4].state = BS_DISABLED;
 }

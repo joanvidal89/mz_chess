@@ -10,6 +10,10 @@ MZAudio::~MZAudio()
     UnloadMusicStream(music);
     UnloadSound(intro);
     UnloadSound(hover);
+    UnloadSound(accept);
+    UnloadSound(cancel);
+    UnloadSound(victory);
+    UnloadSound(defeat);
     CloseAudioDevice();
 }
 

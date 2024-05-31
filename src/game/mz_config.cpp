@@ -2,7 +2,9 @@
 
 MZConfig::MZConfig() {}
 
-MZConfig::~MZConfig() {}
+MZConfig::~MZConfig()
+{
+}
 
 bool MZConfig::readConfig()
 {

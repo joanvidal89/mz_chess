@@ -5,9 +5,7 @@
 std::string serverIP;
 int serverPort;
 
-MZComm::MZComm()
-{
-}
+MZComm::MZComm() {}
 
 MZComm::~MZComm()
 {
@@ -26,11 +24,6 @@ MZComm::~MZComm()
         CloseHandle(processInformation.hProcess);
     if (processInformation.hThread != NULL)
         CloseHandle(processInformation.hThread);
-
-    free(pipeinWrite);
-    free(pipeinRead);
-    free(pipeoutWrite);
-    free(pipeoutRead);
 }
 
 void MZComm::launchProcess()

@@ -2,6 +2,7 @@
 #define MZ_AUDIO
 
 #include "raylib.h"
+#include <cstdio>
 
 class MZAudio
 {

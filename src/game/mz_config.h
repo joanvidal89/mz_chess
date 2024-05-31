@@ -17,7 +17,7 @@ public:
     Config currentConfig;
 
 private:
-    const std::string filename = "game.ini";
+    const std::string filename = "mzchess.ini";
 };
 
 #endif

@@ -7,7 +7,9 @@ MZInput::MZInput()
     virtualMousePos = Vector2{0.0f, 0.0f};
 }
 
-MZInput::~MZInput() {}
+MZInput::~MZInput()
+{
+}
 
 RayCollision MZInput::getRayCollision() { return rayCollision; }
 
