@@ -33,15 +33,18 @@ public:
     void clearMovements();
 
     // ASYNC
-    void startProcessBoard();
-    bool isProcessBoardReady();
+    void processBoard();
+
 
     // ENDGAME
-    bool checkLoss();
-    bool checkDrawNoMoves();
+    bool checkNoAvaiableMoves();
+    bool checkDrawByInactivity();
+    bool checkDrawByMaterial();
+    void setGameResult(int result);
+    int getGameResult();
 
     // UTILS
-    void initializeBoard();
+    void initializeBoard(bool blitz);
     bool isBoardPositionValid(BoardPosition position);
     Cell &getBoardCell(BoardPosition position);
     std::array<Cell, 64> &getBoardCells();
@@ -58,19 +61,18 @@ public:
 private:
     std::future<void> processBoardFuture;
 
-    PieceMove lastMove;
-    float playerTime;
-    int fullTurn;
-    int halfTurns;
+    PieceMove lastMove = PieceMove{BoardPosition{-1, -1}, BoardPosition{-1, -1}, MT_MOVE};
+    bool isBlitz = false;
+    float playerTime = 2400.0f;
+    int fullTurn = 0;
+    int turnsToDraw = 50;
 
     int gameResult = -1;
-    int whiteDeaths[5] = {0,0,0,0,0};
-    int blackDeaths[5] = {0,0,0,0,0};
+    int whiteDeaths[5] = {0, 0, 0, 0, 0};
+    int blackDeaths[5] = {0, 0, 0, 0, 0};
 
-    void processBoard();
     void addMovementToPiece(BoardPosition origin, BoardPosition target, MoveType moveType);
     Cell &getAuxiliaryBoardCell(BoardPosition position, std::array<Cell, 64> *auxiliaryBoard);
-    bool isWhiteInCheck();
     bool checkMoveValidity(PieceMove pmove);
 
     const int rookDeltas[4][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};

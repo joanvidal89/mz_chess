@@ -11,9 +11,6 @@ public:
 
     void loadResources();
 
-    void updateAudio();
-    void setMusicVolume(float vol);
-    
     void playHoverSound();
     void playAcceptSound();
     void playCancelSound();

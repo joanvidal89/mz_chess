@@ -186,7 +186,7 @@ void SceneMenuOpponent::ssMenu()
         if (director->input->isVirtualCursorOnRect(play.collision))
         {
             currentHoverPlayId = play.id;
-            if (IsMouseButtonPressed(0))
+            if (director->input->getMouseButtonDown() == 1)
             {
                 performPlayButtonAction(play);
                 director->renderVS->drawButtonWithText(play, BS_CLICK);
@@ -220,7 +220,8 @@ void SceneMenuOpponent::ssMenu()
         if (director->input->isVirtualCursorOnRect(opt.collision))
         {
             currentHoverBtnId = opt.id;
-            if (IsMouseButtonPressed(0))
+
+            if (director->input->getMouseButtonDown() == 1)
             {
                 performOptionButtonAction(opt);
                 director->renderVS->drawOption(opt, BS_CLICK);
@@ -347,6 +348,7 @@ void SceneMenuOpponent::performOptionButtonAction(UIButton opt)
         director->config->currentConfig.music = 1;
         break;
     case 7:
+        director->audio->playCancelSound();
         futureScene = ST_EXIT;
         currentState = SS_MENU_OUT;
         deltaTime = 0.0f;
@@ -358,18 +360,19 @@ void SceneMenuOpponent::performOptionButtonAction(UIButton opt)
 
 void SceneMenuOpponent::performPlayButtonAction(UIButton btn)
 {
+    bool accept = false;
+    bool blitz = false;
+
     switch (btn.id)
     {
     case 1:
         director->audio->playAcceptSound();
-        director->board->initializeBoard();
-        futureScene = ST_GAME;
-        currentState = SS_MENU_OUT;
-        deltaTime = 0.0f;
+        accept = true;
         break;
     case 2:
         director->audio->playAcceptSound();
-
+        accept = true;
+        blitz = true;
         break;
     case 3:
         director->audio->playCancelSound();
@@ -377,6 +380,52 @@ void SceneMenuOpponent::performPlayButtonAction(UIButton btn)
         currentState = SS_MENU_OUT;
         deltaTime = 0.0f;
         break;
+    }
+
+    if (accept)
+    {
+        switch (director->opponentId)
+        {
+        case 1:
+            director->uciEngine->setLevel("0");
+            director->uciEngine->setDepth("1");
+            break;
+        case 2:
+            director->uciEngine->setLevel("4");
+            director->uciEngine->setDepth("3");
+            break;
+        case 3:
+            director->uciEngine->setLevel("8");
+            director->uciEngine->setDepth("5");
+            break;
+        case 4:
+            director->uciEngine->setLevel("12");
+            director->uciEngine->setDepth("7");
+            break;
+        case 5:
+            director->uciEngine->setLevel("16");
+            director->uciEngine->setDepth("9");
+            break;
+        case 6:
+            director->uciEngine->setLevel("20");
+            director->uciEngine->setDepth("11");
+            break;
+        case 7:
+            director->uciEngine->setLevel("24");
+            director->uciEngine->setDepth("13");
+            break;
+        case 8:
+            director->uciEngine->setLevel("25");
+            director->uciEngine->setDepth("15");
+            break;
+        default:
+            break;
+        }
+
+        director->board->initializeBoard(blitz);
+        futureScene = ST_MENU_GAME_START;
+        currentState = SS_MENU_OUT;
+        deltaTime = 0.0f;
     }
 }
 
@@ -394,7 +443,7 @@ std::string SceneMenuOpponent::formatResponse(const std::string &response)
         {
             line.pop_back();
         }
-        
+
         std::istringstream lineStream(line);
         std::string name, score;
         std::getline(lineStream, name, ';');

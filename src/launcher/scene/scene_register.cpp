@@ -164,7 +164,7 @@ void SceneRegister::performMenu()
             if (launcher->input->checkMouseOver(btn.rect))
             {
                 currentHoverBtnId = btn.id;
-                if (IsMouseButtonPressed(0))
+                if (launcher->input->getMouseButtonDown() == 1)
                 {
                     performButtonAction(btn.id);
                     launcher->render2D->drawButton(btn, BS_CLICK);
@@ -189,7 +189,7 @@ void SceneRegister::performMenu()
         {
             currentHoverBtnId = input.id;
 
-            if (IsMouseButtonPressed(0))
+            if (launcher->input->getMouseButtonDown() == 1)
             {
                 launcher->audio->playAcceptSound();
                 currentSelectInput = input.id;

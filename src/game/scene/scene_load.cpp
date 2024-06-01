@@ -90,6 +90,7 @@ void SceneLoad::ssLoadData()
     director->audio->loadResources();
     director->render3D->loadResources();
     director->renderVS->loadResources();
+    director->uciEngine->initialize();
 
     if (!director->skipIntro)
         director->audio->playIntroSound();
@@ -111,25 +112,17 @@ void SceneLoad::ssLoadData()
     // End
     //--------------------------------------------------------------------------------------
     deltaTime = 0.0f;
-    // DEBUG LOAD DIRECTLY MENU
+    // TODO - REMOVE DEBUG LOAD DIRECTLY MENU
     if (director->skipIntro)
     {
+        director->composite->updateBaseCamPosition(menuCamera.position);
+        director->composite->updateBaseCamTarget(menuCamera.target);
+        director->composite->updateBaseCamFov(menuCamera.fovy);
+        director->composite->updateFinalCam();
         director->audio->playIntroMusic();
         director->audio->setIntroMusicVolume(0.6f);
-        director->composite->updateBaseCamPosition(gameCamera.position);
-        director->composite->updateBaseCamTarget(gameCamera.target);
-        director->composite->updateBaseCamFov(gameCamera.fovy);
-        director->composite->updateFinalCam();
-
-        director->uciEngine->startInitialize();
-        while (!director->uciEngine->isReadyInitialize())
-        {
-        }
-        if (director->uciEngine->getAnswerInit() == "ERROR")
-        {
-            printf("ERROR!!! Game should close.");
-        }
-        director->newScene = ST_GAME;
+        deltaTime = 0.0f;
+        director->newScene = ST_MENU_SELECT;
     }
     currentState = SS_LOAD_DATA_END;
 }
@@ -152,9 +145,6 @@ void SceneLoad::ssLoadDataEnd()
 
     if (deltaTime >= 3.0f)
     {
-        director->audio->playIntroMusic();
-        director->audio->setIntroMusicVolume(0.1f);
-
         deltaTime = 0.0f;
         currentState = SS_TRANSITION_INTRO;
     }
@@ -209,6 +199,7 @@ void SceneLoad::ssTransitionIntro()
         director->composite->updateBaseCamTarget(menuCamera.target);
         director->composite->updateBaseCamFov(menuCamera.fovy);
         director->composite->updateFinalCam();
+        director->audio->playIntroMusic();
         director->audio->setIntroMusicVolume(0.6f);
 
         deltaTime = 0.0f;

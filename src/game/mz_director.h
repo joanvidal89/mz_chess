@@ -19,7 +19,8 @@
 #include "scene/scene_load.h"
 #include "scene/scene_menu_404.h"
 #include "scene/scene_menu_opponent.h"
-#include "scene/scene_menu_postgame.h"
+#include "scene/scene_menu_gamestart.h"
+#include "scene/scene_menu_gameend.h"
 #include "scene/scene_menu_select.h"
 
 class MZDirector
@@ -46,7 +47,6 @@ public:
 
     int accountId;
     int opponentId;
-    int score;
     bool skipIntro;
 
     bool exitGame = false;

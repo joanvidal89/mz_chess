@@ -104,7 +104,7 @@ void SceneReqSignup::performMenu()
     {
         currentHoverBtnId = 1;
 
-        if (IsMouseButtonPressed(0))
+        if (launcher->input->getMouseButtonDown() == 1)
         {
             launcher->audio->playAcceptSound();
             currentState = SS_MENU_OUT;

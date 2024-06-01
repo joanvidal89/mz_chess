@@ -11,11 +11,7 @@ MZDirector::MZDirector(int accountId, int skipIntro)
     render3D = new MZRender3D();
     renderVS = new MZRenderVS();
     uciEngine = new MZUciEngine();
-
-    board->initializeBoard();
-    
     opponentId = 0;
-    score = 0;
 
     newScene = ST_LOAD;
     this->accountId = accountId;
@@ -27,13 +23,12 @@ MZDirector::~MZDirector()
     config->writeConfig();
     delete (audio);
     delete (board);
+    delete (comm);
     delete (composite);
     delete (config);
     delete (input);
     delete (render3D);
     delete (renderVS);
-
-    delete (comm);
     delete (uciEngine);
 }
 
@@ -41,16 +36,16 @@ void MZDirector::run()
 {
     // INIT WINDOW
     //------------------------------------------------------------------------------------
-    //SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
-    //SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+    // SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
+    // SetConfigFlags(FLAG_WINDOW_UNDECORATED);
     // SetConfigFlags(FLAG_MSAA_4X_HINT);
     SetConfigFlags(FLAG_VSYNC_HINT);
     // SetConfigFlags(FLAG_WINDOW_MAXIMIZED);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
     // SetTraceLogLevel(LOG_ALL);
-    //InitWindow(GetMonitorWidth(0), GetMonitorHeight(0), "MZ Chess");
+    // InitWindow(GetMonitorWidth(0), GetMonitorHeight(0), "MZ Chess");
     InitWindow(1600, 900, "MZ Chess");
-    //SetTargetFPS(60);
+    // SetTargetFPS(60);
     HideCursor();
 
     // INIT CONFIG
@@ -64,7 +59,6 @@ void MZDirector::run()
     comm->address = config->currentConfig.ip;
     comm->port = config->currentConfig.port;
     comm->accountId = std::to_string(accountId);
-
     comm->launchProcess();
     uciEngine->launchProcess();
 
@@ -104,8 +98,11 @@ void MZDirector::changeScene(SceneType newScene)
     case ST_MENU_OPPONENT:
         scene = new SceneMenuOpponent(this);
         break;
-    case ST_MENU_POSTGAME:
-        scene = new SceneMenuPostgame(this);
+    case ST_MENU_GAME_END:
+        scene = new SceneMenuGameEnd(this);
+        break;
+    case ST_MENU_GAME_START:
+        scene = new SceneMenuGameStart(this);
         break;
     case ST_GAME:
         scene = new SceneGame(this);

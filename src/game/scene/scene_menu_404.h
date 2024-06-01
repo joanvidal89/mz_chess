@@ -59,8 +59,6 @@ private:
         7, Rectangle{318, 58, 96, 32}, Rectangle{332, 302, 96, 32}, Rectangle{332, 302, 96, 32}, Vector2{332, 302}, ""};
 
     UIButton optionButtons[4];
-
-    std::string formatResponse(const std::string &response);
 };
 
 #endif

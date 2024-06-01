@@ -43,7 +43,6 @@ bool MZLauncher::run()
 
     while (!exitLauncher)
     {
-        audio->updateAudio();
         scene->update();
 
         if (scene->getSceneType() != newScene)

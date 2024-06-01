@@ -240,7 +240,7 @@ HIGHSCORE
 
 · **MZAudio**: carga en memoria archivos de sonido, controla y actualiza los canales de audio y música, así como el volumen, tono y panning de los mismos.  
 
-· **MZBoard**: contiene la lógica del juego de ajedrez: controla casillas, piezas, turnos, movimientos de las piezas, legalidad de movimientos, enroques, "en passant", jaques, condiciones de victoria, tablas por inacción, tablas por falta de material. El cálculo de movimientos y legalidad de las piezas se realiza de forma asíncrona.
+· **MZBoard**: contiene la lógica del juego de ajedrez: controla casillas, piezas, turnos, movimientos de las piezas, legalidad de movimientos, enroques, "en passant", jaques, condiciones de victoria, tablas por inacción, tablas por falta de material.
 
 · **MZComm**: se encarga de lanzar un subproceso del cliente "client.exe", establecer una comunicación i/o a través de tuberías, y utilizar dichas tuberías para comunicarse a través de comandos CMD. Lo hace de forma asíncrona utilizando la librería <future> de C++. 
 

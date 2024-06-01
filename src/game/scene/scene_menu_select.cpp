@@ -123,7 +123,7 @@ void SceneMenuSelect::ssMenu()
             director->renderVS->drawHeaderText(OPPTX_LOCATION, opp.name, 28);
 
             currentHoverOppId = opp.id;
-            if (IsMouseButtonPressed(0))
+            if (director->input->getMouseButtonDown() == 1)
             {
                 performOppButtonAction(opp);
                 director->renderVS->drawOpponent(opp, BS_CLICK);
@@ -155,7 +155,7 @@ void SceneMenuSelect::ssMenu()
         if (director->input->isVirtualCursorOnRect(opt.collision))
         {
             currentHoverBtnId = opt.id;
-            if (IsMouseButtonPressed(0))
+            if (director->input->getMouseButtonDown() == 1)
             {
                 performOptionButtonAction(opt);
                 director->renderVS->drawOption(opt, BS_CLICK);
@@ -280,6 +280,7 @@ void SceneMenuSelect::performOptionButtonAction(UIButton opt)
         director->config->currentConfig.music = 1;
         break;
     case 7:
+        director->audio->playCancelSound();
         futureScene = ST_EXIT;
         currentState = SS_MENU_OUT;
         deltaTime = 0.0f;

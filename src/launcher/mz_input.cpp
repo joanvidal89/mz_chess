@@ -72,3 +72,16 @@ bool MZInput::isKeyValid(int key)
 
     return false;
 }
+
+int MZInput::getMouseButtonDown()
+{
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        return 1;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+    {
+        return 2;
+    }
+    return 0;
+}

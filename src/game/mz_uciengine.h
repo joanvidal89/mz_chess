@@ -16,23 +16,32 @@ public:
 
     void launchProcess();
 
-    void startInitialize();
-    bool isReadyInitialize();
-    std::string getAnswerInit();
+    void setLevel(std::string lv);
+    void setDepth(std::string dp);
+
+    std::string initialize();
+
+    void startSetLevel();
+    bool isReadySetLevel();
+    std::string getSetLevelResponse();
 
     void startFindBestMove();
     bool isReadyBestMove();
     std::string getBestMoveResponse();
 
-    std::string level;
-    std::string depth;
-    std::vector<std::string> moves;
+    void addMove(std::string m);
+    bool checkDrawByRepeat();
+    void clearMoves();
 
 private:
-    std::string initialize();
-    std::future<std::string> initializeResponse;
     std::string findBestMove();
+    std::string setAILevel();
+    std::future<std::string> setLevelResponse;
     std::future<std::string> bestMoveResponse;
+    std::vector<std::string> moves;
+
+    std::string level = "0";
+    std::string depth = "1";
 
     const std::string BR = "\n";
     const std::string UCI = "uci";
@@ -53,7 +62,7 @@ private:
     HANDLE pipeinRead = NULL;
     HANDLE pipeoutWrite = NULL;
     HANDLE pipeoutRead = NULL;
-    
+
     std::future<std::string> nextMove;
     LPSTR fileName = const_cast<LPSTR>("dragon.exe");
 };

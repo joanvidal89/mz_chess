@@ -53,17 +53,8 @@ void SceneGame::update()
         ssInit();
         break;
     case SS_REQUEST_MOVES:
-        printf("CLEAR MOVEMENTS\n");
-        director->board->clearMovements();
-        printf("START PROCESS BOARD\n");
-        director->board->startProcessBoard();
-        printf("SET ALL CELLS STATE\n");
-        director->board->setAllCellsState(CS_DISABLED);
-        currentState = SS_AWAIT_MOVES;
-        ssAwaitMoves();
-        break;
-    case SS_AWAIT_MOVES:
-        ssAwaitMoves();
+        preparePlayerTurn();
+        drawDefaultRender();
         break;
     case SS_PLAYER_TURN:
         ssPlayerTurn();
@@ -83,7 +74,7 @@ void SceneGame::update()
         director->uciEngine->startFindBestMove();
         director->board->setAllCellsState(CS_DISABLED);
         currentState = SS_AWAIT_AI;
-        ssAwaitAI();
+        drawDefaultRender();
         break;
     case SS_AWAIT_AI:
         ssAwaitAI();
@@ -131,7 +122,6 @@ void SceneGame::ssInit()
         director->composite->updateFinalCam();
 
         deltaTime = 0.0f;
-        printf("CURRENT STATE = SS_REQUEST_MOVES\n");
         currentState = SS_REQUEST_MOVES;
     }
 }
@@ -163,37 +153,6 @@ void SceneGame::ssOut()
 
         deltaTime = 0.0f;
         director->newScene = futureScene;
-    }
-}
-
-void SceneGame::ssAwaitMoves()
-{
-    // Update Camera
-    //--------------------------------------------------------------------------------------
-    director->composite->updateFinalCamDampen();
-
-    // Draw Render
-    //--------------------------------------------------------------------------------------
-    drawDefaultRender();
-
-    // Handle Response
-    //--------------------------------------------------------------------------------------
-    if (director->board->isProcessBoardReady())
-    {
-        printf("CURRENT STATE = SS_PLAYER_TURN\n");
-        currentState = SS_PLAYER_TURN;
-        director->board->setAllCellsState(CS_DISABLED);
-        director->board->markCheckCells();
-        gameButtons[0].state = BS_ENABLED;
-
-        // CHECK LOSS - NO AVAIABLE MOVES
-        if (director->board->checkLoss())
-        {
-            director->audio->playDefeatSound();
-            futureScene = ST_MENU_POSTGAME;
-            currentState = SS_OUT;
-            deltaTime = 0.0f;
-        }
     }
 }
 
@@ -416,19 +375,15 @@ void SceneGame::ssPlayerTurn()
                 {
                     director->board->setCellState(currentSelectedCell->position, CS_SELECTED);
                     director->board->setCellState(currentPieceMove->target, CS_ATTACKED);
-                    printf("CURRENT STATE = SS_PLAYER_TURN_PROMOTE\n");
                     gameButtons[1].state = BS_ENABLED;
                     gameButtons[2].state = BS_ENABLED;
                     gameButtons[3].state = BS_ENABLED;
                     gameButtons[4].state = BS_ENABLED;
                     currentState = SS_PLAYER_TURN_PROMOTE;
-
-                    // TODO - DELETE THIS LINE
-                    deltaTime = 0.0f;
                 }
                 else
                 {
-                    printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
+                    gameButtons[0].state = BS_DISABLED;
                     currentState = SS_PLAYER_ANIM_START;
                 }
             }
@@ -492,12 +447,23 @@ void SceneGame::ssPlayerAnimation()
     // Draw 2D
     //--------------------------------------------------------------------------------------
     director->renderVS->beginRT();
+
     for (Cell c : director->board->getBoardCells())
     {
         director->renderVS->drawCell(c);
     }
 
-    // TODO INTERFACE
+    director->renderVS->drawGamePanel(GAME_PANEL);
+
+    director->renderVS->drawMonoText(Vector2{526, 430}, director->board->getFullTurn().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{518, 446}, director->board->getPlayerTime().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{510, 496}, director->board->getBlackDeaths().c_str(), 12, 5.0f);
+    director->renderVS->drawMonoText(Vector2{510, 524}, director->board->getWhiteDeaths().c_str(), 12, 5.0f);
+
+    for (GameButton btn : gameButtons)
+    {
+        director->renderVS->drawGameButton(btn);
+    }
 
     director->renderVS->endRT();
 
@@ -652,7 +618,7 @@ void SceneGame::ssPlayerAnimation()
             }
         }
 
-        director->uciEngine->moves.push_back(notation);
+        director->uciEngine->addMove(notation);
 
         // DELETE ENPASSANT PAWN
         if (currentPieceMove->type == MT_ENPASSANT)
@@ -661,8 +627,7 @@ void SceneGame::ssPlayerAnimation()
         }
 
         // DELETE ATTACKED PIECE
-        if (currentPieceMove->type == MT_ATTACK ||
-            currentPieceMove->type == MT_ATTACKPROMOTE)
+        if (currentPieceMove->type == MT_ATTACK || currentPieceMove->type == MT_ATTACKPROMOTE)
         {
             director->board->deletePiece(BoardPosition{currentPieceMove->target.file, currentPieceMove->target.rank});
         }
@@ -684,7 +649,6 @@ void SceneGame::ssPlayerAnimation()
 
         // HANDLE EOT
         director->board->setAllPiecesState(PS_IDLE);
-        printf("CURRENT STATE = SS_REQUEST_AI\n");
         currentState = SS_REQUEST_AI;
 
         currentHoverCell = nullptr;
@@ -708,23 +672,33 @@ void SceneGame::ssAwaitAI()
     if (director->uciEngine->isReadyBestMove())
     {
         std::string response = director->uciEngine->getBestMoveResponse();
-        printf("MOVE RESPONSE: %s\n", response.c_str());
 
-        // HANDLE AI LOSS
-        if (response.find("none") != std::string::npos)
+        // CHECK AI NO MOVES
+        if (response.substr(0, 4) == "0000")
         {
-            director->audio->playVictorySound();
-            futureScene = ST_MENU_POSTGAME;
-            printf("CURRENT STATE = SS_OUT\n");
-            currentState = SS_OUT;
-            deltaTime = 0.0f;
+            for (Cell c : director->board->getBoardCells())
+            {
+                if (c.pieceColor == CC_BLACK && !c.pieceMoves.empty())
+                {
+                    handleEndgame(1);
+                    break;
+                }
+            }
+            // IF NOT A PLAYER WIN ITS A DRAW
+            handleEndgame(2);
         }
         else
         {
             // DEBUG: I CAN OVERRIDE AI RESPONSE
             // std::getline(std::cin, response);
-
-            director->uciEngine->moves.push_back(response.substr(0, 4));
+            if (response[4] != ' ')
+            {
+                director->uciEngine->addMove(response.substr(0, 4));
+            }
+            else
+            {
+                director->uciEngine->addMove(response.substr(0, 5));
+            }
 
             currentAIMove = PieceMove{BoardPosition{response[0] - 'a', response[1] - '1'},
                                       BoardPosition{response[2] - 'a', response[3] - '1'}, MT_MOVE};
@@ -802,7 +776,6 @@ void SceneGame::ssAwaitAI()
                 }
             }
 
-            printf("CURRENT STATE = SS_AI_ANIM_START\n");
             currentState = SS_AI_ANIM_START;
         }
     }
@@ -817,12 +790,23 @@ void SceneGame::ssAIAnimation()
     // Draw 2D
     //--------------------------------------------------------------------------------------
     director->renderVS->beginRT();
+
     for (Cell c : director->board->getBoardCells())
     {
         director->renderVS->drawCell(c);
     }
 
-    // TODO INTERFACE
+    director->renderVS->drawGamePanel(GAME_PANEL);
+
+    director->renderVS->drawMonoText(Vector2{526, 430}, director->board->getFullTurn().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{518, 446}, director->board->getPlayerTime().c_str(), 12, 1.0f);
+    director->renderVS->drawMonoText(Vector2{510, 496}, director->board->getBlackDeaths().c_str(), 12, 5.0f);
+    director->renderVS->drawMonoText(Vector2{510, 524}, director->board->getWhiteDeaths().c_str(), 12, 5.0f);
+
+    for (GameButton btn : gameButtons)
+    {
+        director->renderVS->drawGameButton(btn);
+    }
 
     director->renderVS->endRT();
 
@@ -966,8 +950,7 @@ void SceneGame::ssAIAnimation()
         }
 
         // DELETE ATTACKED PIECE
-        if (currentAIMove.type == MT_ATTACK ||
-            currentAIMove.type == MT_ATTACKPROMOTE)
+        if (currentAIMove.type == MT_ATTACK || currentAIMove.type == MT_ATTACKPROMOTE)
         {
             director->board->deletePiece(BoardPosition{currentAIMove.target.file, currentAIMove.target.rank});
         }
@@ -996,16 +979,12 @@ void SceneGame::ssAIAnimation()
         // HANDLE EOT
         director->board->addFullTurn();
         director->board->setAllPiecesState(PS_IDLE);
-        printf("CURRENT STATE = SS_REQUEST_MOVES\n");
         currentState = SS_REQUEST_MOVES;
 
         currentHoverCell = nullptr;
         currentSelectedCell = nullptr;
         currentPieceMove = nullptr;
         currentAIMove = {0};
-
-        //TODO DELETE THIS LINE
-        printf("SCORE: ", director->board->calculateScore());
     }
 }
 
@@ -1028,8 +1007,8 @@ void SceneGame::drawDefaultRender()
 
     director->renderVS->drawMonoText(Vector2{526, 430}, director->board->getFullTurn().c_str(), 12, 1.0f);
     director->renderVS->drawMonoText(Vector2{518, 446}, director->board->getPlayerTime().c_str(), 12, 1.0f);
-    director->renderVS->drawMonoText(Vector2{510, 496}, "00000", 12, 5.0f);
-    director->renderVS->drawMonoText(Vector2{510, 524}, "00000", 12, 5.0f);
+    director->renderVS->drawMonoText(Vector2{510, 496}, director->board->getBlackDeaths().c_str(), 12, 5.0f);
+    director->renderVS->drawMonoText(Vector2{510, 524}, director->board->getWhiteDeaths().c_str(), 12, 5.0f);
 
     for (GameButton btn : gameButtons)
     {
@@ -1069,6 +1048,21 @@ void SceneGame::drawDefaultRender()
     director->composite->endDrawing();
 }
 
+void SceneGame::handleEndgame(int result)
+{
+    if (result == 1)
+        director->audio->playVictorySound();
+    else
+        director->audio->playDefeatSound();
+
+    deltaTime = 0.0f;
+    director->uciEngine->clearMoves();
+    director->board->setGameResult(result);
+
+    currentState = SS_OUT;
+    futureScene = ST_MENU_GAME_END;
+}
+
 void SceneGame::checkButtonClick()
 {
     int id = -1;
@@ -1081,14 +1075,10 @@ void SceneGame::checkButtonClick()
             id = btn.id;
         }
     }
-
     switch (id)
     {
     case 1:
-        director->audio->playCancelSound();
-        futureScene = ST_MENU_POSTGAME;
-        printf("CURRENT STATE = SS_OUT\n");
-        currentState = SS_OUT;
+        handleEndgame(0);
         deltaTime = 0.0f;
         break;
     case 2:
@@ -1112,10 +1102,41 @@ void SceneGame::performButtonClick(PieceState state)
 {
     director->board->setAllCellsState(CS_DISABLED);
     currentSelectedCell->pieceState = state;
-    printf("CURRENT STATE = SS_PLAYER_ANIM_START\n");
     currentState = SS_PLAYER_ANIM_START;
+    gameButtons[0].state = BS_DISABLED;
     gameButtons[1].state = BS_DISABLED;
     gameButtons[2].state = BS_DISABLED;
     gameButtons[3].state = BS_DISABLED;
     gameButtons[4].state = BS_DISABLED;
+}
+
+void SceneGame::preparePlayerTurn()
+{
+    director->board->clearMovements();
+    director->board->setAllCellsState(CS_DISABLED);
+    director->board->processBoard();
+    currentState = SS_PLAYER_TURN;
+    director->board->markCheckCells();
+    gameButtons[0].state = BS_ENABLED;
+
+    // CHECK DRAW BY INACTIVITY / REPEAT MOVES / MATERIAL
+    if (director->board->checkDrawByInactivity() || director->uciEngine->checkDrawByRepeat() || director->board->checkDrawByMaterial())
+    {
+        handleEndgame(2);
+    }
+    // CHECK NO AVAIABLE MOVES
+    else if (director->board->checkNoAvaiableMoves())
+    {
+        // CHECK LOSS
+        for (Cell c : director->board->getBoardCells())
+        {
+            if (c.pieceColor == CC_BLACK && !c.pieceMoves.empty())
+            {
+                handleEndgame(0);
+                break;
+            }
+        }
+        // IF NOT A LOSS IS A DRAW
+        handleEndgame(2);
+    }
 }

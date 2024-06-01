@@ -14,6 +14,7 @@ public:
     void initialize(Vector2 windowPosition);
 
     void handleMouseInput();
+    int getMouseButtonDown();
 
     bool checkMouseOver(Rectangle rect);
     bool isKeyValid(int key);

@@ -54,7 +54,7 @@ private:
 
     void ssInit();
     void ssOut();
-    void ssAwaitMoves();
+    void preparePlayerTurn();
     void ssAwaitAI();
 
     void ssPlayerTurn();
@@ -63,6 +63,7 @@ private:
     void ssAIAnimation();
     void drawDefaultRender();
 
+    void handleEndgame(int result);
     void checkButtonClick();
     void performButtonClick(PieceState state);
 };

@@ -12,6 +12,9 @@ const Rectangle PANEL_RECT = {0, 0, PANEL_SIZE.x, PANEL_SIZE.y};
 const Rectangle BOARD_RECT = {160.0f, 380.0f, 480.0f, 700.0f};
 const Vector3 WORLD_ORIGIN = {0.0f, 0.0f, 0.0f};
 
+const float GAME_TIME_REGULAR = 2399.0f;
+const float GAME_TIME_BLITZ = 600.0f;
+
 enum ButtonState
 {
     BS_ENABLED,
@@ -88,7 +91,8 @@ enum SceneType
     ST_LOAD,
     ST_MENU_SELECT,
     ST_MENU_OPPONENT,
-    ST_MENU_POSTGAME,
+    ST_MENU_GAME_START,
+    ST_MENU_GAME_END,
     ST_MENU_404,
     ST_GAME,
     ST_EXIT,
@@ -105,6 +109,7 @@ enum SceneState
 
     SS_REQUEST_HTTP,
     SS_AWAIT_HTTP,
+    SS_AWAIT_GAME_LOAD,
 
     SS_MENU_IN,
     SS_MENU,

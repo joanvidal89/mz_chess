@@ -4,8 +4,6 @@
 
 MZUciEngine::MZUciEngine()
 {
-    level = "0";
-    depth = "5";
 }
 
 MZUciEngine::~MZUciEngine()
@@ -63,9 +61,14 @@ void MZUciEngine::launchProcess()
     // CloseHandle(pipeoutWrite);
 }
 
-void MZUciEngine::startInitialize()
+void MZUciEngine::setLevel(std::string lv)
 {
-    initializeResponse = std::async(std::launch::async, &MZUciEngine::initialize, this);
+    level = lv;
+}
+
+void MZUciEngine::setDepth(std::string dp)
+{
+    depth = dp;
 }
 
 std::string MZUciEngine::initialize()
@@ -80,15 +83,6 @@ std::string MZUciEngine::initialize()
     if (!WriteFile(pipeinWrite, out.c_str(), out.length(), &write, NULL))
         return "ERROR";
 
-    out = SKILL_LEVEL + level + BR;
-    if (!WriteFile(pipeinWrite, out.c_str(), out.length(), &write, NULL))
-        return "ERROR";
-
-    out = READY + BR;
-
-    if (!WriteFile(pipeinWrite, out.c_str(), out.length(), &write, NULL))
-        return "ERROR";
-
     while (true)
     {
         if (!ReadFile(pipeoutRead, buffer, sizeof(buffer), &read, NULL))
@@ -96,7 +90,7 @@ std::string MZUciEngine::initialize()
 
         outputBuffer.append(buffer, read);
 
-        size_t readyPos = outputBuffer.find(READYOK);
+        size_t readyPos = outputBuffer.find(UCIOK);
         if (readyPos != std::string::npos)
         {
             size_t endLine = outputBuffer.find("\n", readyPos);
@@ -113,16 +107,6 @@ std::string MZUciEngine::initialize()
     return "OK";
 }
 
-bool MZUciEngine::isReadyInitialize()
-{
-    return initializeResponse.valid() && initializeResponse.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-}
-
-std::string MZUciEngine::getAnswerInit()
-{
-    return initializeResponse.get();
-}
-
 void MZUciEngine::startFindBestMove()
 {
     bestMoveResponse = std::async(std::launch::async, &MZUciEngine::findBestMove, this);
@@ -131,7 +115,7 @@ void MZUciEngine::startFindBestMove()
 std::string MZUciEngine::findBestMove()
 {
     DWORD write, read;
-    char buffer[2048];
+    char buffer[4096];
     std::string outputBuffer;
     std::string out;
     std::string bestMove;
@@ -192,4 +176,89 @@ bool MZUciEngine::isReadyBestMove()
 std::string MZUciEngine::getBestMoveResponse()
 {
     return bestMoveResponse.get();
+}
+
+void MZUciEngine::startSetLevel()
+{
+    setLevelResponse = std::async(std::launch::async, &MZUciEngine::setAILevel, this);
+}
+
+std::string MZUciEngine::setAILevel()
+{
+    DWORD write, read, bytesAvailable;
+    char buffer[512];
+    std::string outputBuffer;
+    std::string out;
+
+    out = SKILL_LEVEL + level + BR;
+
+    if (!WriteFile(pipeinWrite, out.c_str(), out.length(), &write, NULL))
+        return "ERROR";
+
+    out = READY + BR;
+
+    if (!WriteFile(pipeinWrite, out.c_str(), out.length(), &write, NULL))
+        return "ERROR";
+
+    while (true)
+    {
+
+        if (!ReadFile(pipeoutRead, buffer, sizeof(buffer), &read, NULL))
+            return "ERROR";
+
+        outputBuffer.append(buffer, read);
+
+        size_t readyok = outputBuffer.find(READYOK);
+        if (readyok != std::string::npos)
+        {
+            size_t endLine = outputBuffer.find("\n", readyok);
+            if (endLine != std::string::npos)
+            {
+                break;
+            }
+        }
+
+        memset(buffer, 0, sizeof(buffer));
+        read = 0;
+    }
+
+    return "OK";
+}
+
+bool MZUciEngine::isReadySetLevel()
+{
+    return setLevelResponse.valid() && setLevelResponse.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+}
+
+std::string MZUciEngine::getSetLevelResponse()
+{
+    return setLevelResponse.get();
+}
+
+void MZUciEngine::addMove(std::string m)
+{
+    moves.push_back(m);
+}
+
+bool MZUciEngine::checkDrawByRepeat()
+{
+    if (moves.size() < 6)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < 3; ++i)
+    {
+        if (moves[moves.size() - 1 - i] != moves[moves.size() - 4 - i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void MZUciEngine::clearMoves()
+{
+    moves.clear();
 }
