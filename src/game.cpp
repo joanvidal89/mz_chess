@@ -8,6 +8,7 @@ int main(int argc, char const *argv[])
 
     int accountId = std::stoi(argv[1]);
     int skipIntro = std::stoi(argv[2]);
+    printf("ACCOUNT ID = %i", accountId);
     MZDirector(accountId, skipIntro).run();
     CloseWindow();
 

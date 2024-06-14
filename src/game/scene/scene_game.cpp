@@ -648,12 +648,21 @@ void SceneGame::ssPlayerAnimation()
         }
 
         // HANDLE EOT
-        director->board->setAllPiecesState(PS_IDLE);
-        currentState = SS_REQUEST_AI;
-
         currentHoverCell = nullptr;
         currentSelectedCell = nullptr;
         currentPieceMove = nullptr;
+
+        // CHECK DRAW BY INACTIVITY / REPEAT MOVES / MATERIAL
+        if (director->board->checkDrawByInactivity() || director->uciEngine->checkDrawByRepeat() || director->board->checkDrawByMaterial())
+        {
+            handleEndgame(GS_DRAW);
+        }
+        // CONTINUE GAME
+        else
+        {
+            director->board->setAllPiecesState(PS_IDLE);
+            currentState = SS_REQUEST_AI;
+        }
     }
 }
 
@@ -676,16 +685,15 @@ void SceneGame::ssAwaitAI()
         // CHECK AI NO MOVES
         if (response.substr(0, 4) == "0000")
         {
-            for (Cell c : director->board->getBoardCells())
+            printf("CHECK AI LOSS\n");
+            if (director->board->checkAILoss())
             {
-                if (c.pieceColor == CC_BLACK && !c.pieceMoves.empty())
-                {
-                    handleEndgame(1);
-                    break;
-                }
+                handleEndgame(GS_WIN);
             }
-            // IF NOT A PLAYER WIN ITS A DRAW
-            handleEndgame(2);
+            else
+            {
+                handleEndgame(GS_DRAW);
+            }
         }
         else
         {
@@ -1048,9 +1056,9 @@ void SceneGame::drawDefaultRender()
     director->composite->endDrawing();
 }
 
-void SceneGame::handleEndgame(int result)
+void SceneGame::handleEndgame(GameResult result)
 {
-    if (result == 1)
+    if (result == GS_WIN)
         director->audio->playVictorySound();
     else
         director->audio->playDefeatSound();
@@ -1078,7 +1086,7 @@ void SceneGame::checkButtonClick()
     switch (id)
     {
     case 1:
-        handleEndgame(0);
+        handleEndgame(GS_LOSS);
         deltaTime = 0.0f;
         break;
     case 2:
@@ -1114,7 +1122,16 @@ void SceneGame::preparePlayerTurn()
 {
     director->board->clearMovements();
     director->board->setAllCellsState(CS_DISABLED);
+
+    /* DEBUG - CHECK TIME OF CALCULATION
+    auto start = std::chrono::high_resolution_clock::now();
     director->board->processBoard();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
+    std::cout << "Calculation time: " << duration.count() << " milliseconds" << std::endl;
+    */
+    director->board->processBoard();
+
     currentState = SS_PLAYER_TURN;
     director->board->markCheckCells();
     gameButtons[0].state = BS_ENABLED;
@@ -1122,7 +1139,7 @@ void SceneGame::preparePlayerTurn()
     // CHECK DRAW BY INACTIVITY / REPEAT MOVES / MATERIAL
     if (director->board->checkDrawByInactivity() || director->uciEngine->checkDrawByRepeat() || director->board->checkDrawByMaterial())
     {
-        handleEndgame(2);
+        handleEndgame(GS_DRAW);
     }
     // CHECK NO AVAIABLE MOVES
     else if (director->board->checkNoAvaiableMoves())
@@ -1132,11 +1149,11 @@ void SceneGame::preparePlayerTurn()
         {
             if (c.pieceColor == CC_BLACK && !c.pieceMoves.empty())
             {
-                handleEndgame(0);
-                break;
+                handleEndgame(GS_LOSS);
+                return;
             }
         }
         // IF NOT A LOSS IS A DRAW
-        handleEndgame(2);
+        handleEndgame(GS_DRAW);
     }
 }

@@ -89,8 +89,7 @@ void SceneRegister::performMenu()
         }
         if (key2 == KEY_TAB)
         {
-            launcher->audio->playAcceptSound();
-
+            launcher->audio->playHoverSound();
             currentSelectInput++;
         }
     }
@@ -116,7 +115,7 @@ void SceneRegister::performMenu()
         }
         if (key2 == KEY_TAB)
         {
-            launcher->audio->playAcceptSound();
+            launcher->audio->playHoverSound();
             currentSelectInput++;
         }
     }
@@ -148,7 +147,7 @@ void SceneRegister::performMenu()
         }
         if (key2 == KEY_TAB)
         {
-            launcher->audio->playAcceptSound();
+            launcher->audio->playHoverSound();
             currentSelectInput = 0;
         }
     }

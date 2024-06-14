@@ -18,13 +18,13 @@ SceneMenuGameEnd::SceneMenuGameEnd(MZDirector *director) : MZScene(director, Sce
     opponentId = std::to_string(director->opponentId);
     switch (director->board->getGameResult())
     {
-    case 0:
+    case GS_LOSS:
         gameResult = "YOU LOST";
         break;
-    case 1:
+    case GS_WIN:
         gameResult = "YOU WON!";
         break;
-    case 2:
+    case GS_DRAW:
         gameResult = "DRAW";
         break;
     default:

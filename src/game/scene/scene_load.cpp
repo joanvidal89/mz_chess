@@ -120,7 +120,6 @@ void SceneLoad::ssLoadData()
         director->composite->updateBaseCamFov(menuCamera.fovy);
         director->composite->updateFinalCam();
         director->audio->playIntroMusic();
-        director->audio->setIntroMusicVolume(0.6f);
         deltaTime = 0.0f;
         director->newScene = ST_MENU_SELECT;
     }
@@ -164,7 +163,6 @@ void SceneLoad::ssTransitionIntro()
 
     // Update Audio
     //--------------------------------------------------------------------------------------
-    director->audio->setIntroMusicVolume(Math::floatLerp(0.1f, 0.6f, deltaTime / 5.0f));
     director->audio->updateAudio();
 
     // Draw 2D
@@ -200,7 +198,6 @@ void SceneLoad::ssTransitionIntro()
         director->composite->updateBaseCamFov(menuCamera.fovy);
         director->composite->updateFinalCam();
         director->audio->playIntroMusic();
-        director->audio->setIntroMusicVolume(0.6f);
 
         deltaTime = 0.0f;
         director->newScene = ST_MENU_SELECT;

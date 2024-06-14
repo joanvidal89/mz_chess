@@ -35,7 +35,7 @@ void MZUciEngine::launchProcess()
     CreatePipe(&pipeinRead, &pipeinWrite, &securityAttributes, 0);
 
     startupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-    startupInfo.wShowWindow = SW_SHOW;
+    startupInfo.wShowWindow = SW_HIDE;
     startupInfo.hStdInput = pipeinRead;
     startupInfo.hStdOutput = pipeoutWrite;
     startupInfo.hStdError = pipeoutWrite;
@@ -46,7 +46,7 @@ void MZUciEngine::launchProcess()
             NULL,               // [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
             NULL,               // [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
             TRUE,               // [in]                BOOL                  bInheritHandles,
-            0,                  // [in]                DWORD                 dwCreationFlags,
+            CREATE_NO_WINDOW,   // [in]                DWORD                 dwCreationFlags,
             NULL,               // [in, optional]      LPVOID                lpEnvironment,
             NULL,               // [in, optional]      LPCSTR                lpCurrentDirectory,
             &startupInfo,       // [in]                LPSTARTUPINFOA        lpStartupInfo,

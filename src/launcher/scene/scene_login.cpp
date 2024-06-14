@@ -89,7 +89,7 @@ void SceneLogin::performMenu()
         }
         if (key2 == KEY_TAB)
         {
-            launcher->audio->playAcceptSound();
+            launcher->audio->playHoverSound();
             currentSelectInput++;
         }
     }
@@ -115,8 +115,12 @@ void SceneLogin::performMenu()
         }
         if (key2 == KEY_TAB)
         {
-            launcher->audio->playAcceptSound();
+            launcher->audio->playHoverSound();
             currentSelectInput--;
+        }
+        if (key2 == KEY_ENTER && password_letterCount > 0)
+        {
+            performButtonAction(0);
         }
     }
 

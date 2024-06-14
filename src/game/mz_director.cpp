@@ -36,16 +36,16 @@ void MZDirector::run()
 {
     // INIT WINDOW
     //------------------------------------------------------------------------------------
-    // SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
-    // SetConfigFlags(FLAG_WINDOW_UNDECORATED);
+    SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE);
+    SetConfigFlags(FLAG_WINDOW_UNDECORATED);
     // SetConfigFlags(FLAG_MSAA_4X_HINT);
     SetConfigFlags(FLAG_VSYNC_HINT);
     // SetConfigFlags(FLAG_WINDOW_MAXIMIZED);
-    SetConfigFlags(FLAG_WINDOW_TOPMOST);
+    // SetConfigFlags(FLAG_WINDOW_TOPMOST);
     // SetTraceLogLevel(LOG_ALL);
-    // InitWindow(GetMonitorWidth(0), GetMonitorHeight(0), "MZ Chess");
-    InitWindow(1600, 900, "MZ Chess");
-    // SetTargetFPS(60);
+    InitWindow(GetMonitorWidth(0), GetMonitorHeight(0), "MZ Chess");
+    //InitWindow(1600, 900, "MZ Chess");
+    //SetTargetFPS(60);
     HideCursor();
 
     // INIT CONFIG

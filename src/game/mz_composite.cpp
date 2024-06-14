@@ -25,15 +25,30 @@ void MZComposite::loadResources()
     SetShaderValue(shaderComposite, GetShaderLocation(shaderComposite, "screenSize"), &screenSize, SHADER_UNIFORM_VEC2);
 }
 
-void MZComposite::switchPostProcess(bool on) { postprocess = on; }
+void MZComposite::switchPostProcess(bool on)
+{
+    postprocess = on;
+}
 
-void MZComposite::updateBaseCamPosition(Vector3 position) { cameraBase.position = position; }
+void MZComposite::updateBaseCamPosition(Vector3 position)
+{
+    cameraBase.position = position;
+}
 
-void MZComposite::updateBaseCamTarget(Vector3 target) { cameraBase.target = target; }
+void MZComposite::updateBaseCamTarget(Vector3 target)
+{
+    cameraBase.target = target;
+}
 
-void MZComposite::updateBaseCamFov(float fovy) { cameraBase.fovy = fovy; }
+void MZComposite::updateBaseCamFov(float fovy)
+{
+    cameraBase.fovy = fovy;
+}
 
-void MZComposite::updateFinalCam() { cameraFinal = cameraBase; }
+void MZComposite::updateFinalCam()
+{
+    cameraFinal = cameraBase;
+}
 
 void MZComposite::updateFinalCamDampen()
 {
@@ -48,7 +63,10 @@ void MZComposite::updateFinalCamDampen()
     };
 }
 
-Camera MZComposite::getFinalCamera() { return cameraFinal; }
+Camera MZComposite::getFinalCamera()
+{
+    return cameraFinal;
+}
 
 void MZComposite::beginRT()
 {
@@ -56,11 +74,20 @@ void MZComposite::beginRT()
     ClearBackground(DARKGRAY);
 }
 
-void MZComposite::beginMode3D() { BeginMode3D(cameraFinal); }
+void MZComposite::beginMode3D()
+{
+    BeginMode3D(cameraFinal);
+}
 
-void MZComposite::endMode3D() { EndMode3D(); }
+void MZComposite::endMode3D()
+{
+    EndMode3D();
+}
 
-void MZComposite::endRT() { EndTextureMode(); }
+void MZComposite::endRT()
+{
+    EndTextureMode();
+}
 
 void MZComposite::beginDrawing()
 {
@@ -79,7 +106,10 @@ void MZComposite::drawComposite()
         EndShaderMode();
 }
 
-void MZComposite::endDrawing() { EndDrawing(); }
+void MZComposite::endDrawing()
+{
+    EndDrawing();
+}
 
 void MZComposite::drawBlackOverlay(float opacity)
 {

@@ -86,6 +86,15 @@ enum CellState
 
 };
 
+enum GameResult
+{
+    GS_NONE,
+    GS_WIN,
+    GS_LOSS,
+    GS_DRAW
+};
+
+
 enum SceneType
 {
     ST_LOAD,

@@ -8,6 +8,9 @@ CONSOLE BUILD
 g++ ./src/game.cpp ./src/game/*.cpp ./src/game/scene/*.cpp -o game.exe -Iinclude -Llib -lraylib -lgdi32 -lwinmm
 
 
+NO_CONSOLE
+g++ "-Wl,-subsystem,windows" ./src/game.cpp ./src/game/*.cpp ./src/game/scene/*.cpp -o game.exe -Iinclude -Llib -lraylib -lgdi32 -lwinmm
+
 -----------------------------------------------------------------------------------------------------
 - BUILD SERVER
 -----------------------------------------------------------------------------------------------------

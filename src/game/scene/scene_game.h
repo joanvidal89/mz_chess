@@ -63,7 +63,7 @@ private:
     void ssAIAnimation();
     void drawDefaultRender();
 
-    void handleEndgame(int result);
+    void handleEndgame(GameResult result);
     void checkButtonClick();
     void performButtonClick(PieceState state);
 };

@@ -40,8 +40,9 @@ public:
     bool checkNoAvaiableMoves();
     bool checkDrawByInactivity();
     bool checkDrawByMaterial();
-    void setGameResult(int result);
-    int getGameResult();
+    bool checkAILoss();
+    void setGameResult(GameResult result);
+    GameResult getGameResult();
 
     // UTILS
     void initializeBoard(bool blitz);
@@ -67,7 +68,7 @@ private:
     int fullTurn = 0;
     int turnsToDraw = 50;
 
-    int gameResult = -1;
+    GameResult gameResult = GS_NONE;
     int whiteDeaths[5] = {0, 0, 0, 0, 0};
     int blackDeaths[5] = {0, 0, 0, 0, 0};
 

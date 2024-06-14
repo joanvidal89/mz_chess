@@ -22,10 +22,10 @@ void MZAudio::loadResources()
     cancel = LoadSound("res/snd_cancel.ogg");
     error = LoadSound("res/snd_error.ogg");
     input = LoadSound("res/snd_input.ogg");
-    SetSoundVolume(hover, 0.2f);
-    SetSoundVolume(accept, 0.2f);
-    SetSoundVolume(cancel, 0.2f);
-    SetSoundVolume(error, 0.2f);
+    SetSoundVolume(hover, 0.1f);
+    SetSoundVolume(accept, 0.1f);
+    SetSoundVolume(cancel, 0.1f);
+    SetSoundVolume(error, 0.1f);
     SetSoundVolume(input, 0.1f);
 }
 

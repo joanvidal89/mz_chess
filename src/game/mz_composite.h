@@ -45,7 +45,6 @@ private:
     Texture2D texLogo;
     Texture2D texCursor;
     RenderTexture2D rtComposite;
-    RenderTexture2D rtArcadeScreen;
     Shader shaderComposite;
 
     bool postprocess;

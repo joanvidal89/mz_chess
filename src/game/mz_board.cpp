@@ -230,7 +230,7 @@ bool MZBoard::checkNoAvaiableMoves()
 {
     for (Cell &c : boardCells)
     {
-        if (!c.pieceMoves.empty())
+        if (c.pieceColor == CC_WHITE && !c.pieceMoves.empty())
         {
             return false;
         }
@@ -240,7 +240,7 @@ bool MZBoard::checkNoAvaiableMoves()
 
 bool MZBoard::checkDrawByInactivity()
 {
-    return false;
+    return (turnsToDraw <= 0);
 }
 
 bool MZBoard::checkDrawByMaterial()
@@ -307,12 +307,185 @@ bool MZBoard::checkDrawByMaterial()
     return false;
 }
 
-void MZBoard::setGameResult(int result)
+bool MZBoard::checkAILoss()
+{
+    Cell *aidCell;
+    BoardPosition aidBoardPosition;
+
+    for (Cell c : boardCells)
+    {
+        if (c.pieceColor == CC_WHITE)
+        {
+            switch (c.pieceType)
+            {
+                //------------------------------------------------------------------------------------
+                // PAWN LOGIC
+                //------------------------------------------------------------------------------------
+            case PT_PAWN:
+                // CHECK ATTACK LEFT
+                aidBoardPosition = BoardPosition{c.position.file - 1, c.position.rank + 1};
+                if (isBoardPositionValid(aidBoardPosition))
+                {
+                    aidCell = &getBoardCell(aidBoardPosition);
+                    if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                    {
+                        return true;
+                    }
+                }
+                // CHECK ATTACK RIGHT
+                aidBoardPosition = BoardPosition{c.position.file + 1, c.position.rank + 1};
+                if (isBoardPositionValid(aidBoardPosition))
+                {
+                    aidCell = &getBoardCell(aidBoardPosition);
+                    if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                    {
+                        return true;
+                    }
+                }
+                break;
+                //------------------------------------------------------------------------------------
+                // ROOK LOGIC // ERROR TRYING TO TAKE THE QUEEN
+                //------------------------------------------------------------------------------------
+            case PT_ROOK:
+                for (int i = 0; i < 4; ++i)
+                {
+                    int df = rookDeltas[i][0];
+                    int dr = rookDeltas[i][1];
+
+                    aidBoardPosition = c.position;
+
+                    while (true)
+                    {
+                        aidBoardPosition.file += df;
+                        aidBoardPosition.rank += dr;
+
+                        if (!isBoardPositionValid(aidBoardPosition))
+                        {
+                            break;
+                        }
+
+                        aidCell = &getBoardCell(aidBoardPosition);
+
+                        if (aidCell->pieceColor != CC_NONE)
+                        {
+                            if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                            {
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                }
+                break;
+                //------------------------------------------------------------------------------------
+                // KINGHT LOGIC
+                //------------------------------------------------------------------------------------
+            case PT_KNIGHT:
+                for (int i = 0; i < 8; ++i)
+                {
+                    int df = knightDeltas[i][0];
+                    int dr = knightDeltas[i][1];
+
+                    aidBoardPosition = {c.position.file + df, c.position.rank + dr};
+
+                    if (isBoardPositionValid(aidBoardPosition))
+                    {
+                        aidCell = &getBoardCell(aidBoardPosition);
+
+                        if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                break;
+                //------------------------------------------------------------------------------------
+                // BISHOP LOGIC
+                //------------------------------------------------------------------------------------
+            case PT_BISHOP:
+                for (int i = 0; i < 4; ++i)
+                {
+                    int df = bishopDeltas[i][0];
+                    int dr = bishopDeltas[i][1];
+
+                    aidBoardPosition = c.position;
+
+                    while (true)
+                    {
+                        aidBoardPosition.file += df;
+                        aidBoardPosition.rank += dr;
+
+                        if (!isBoardPositionValid(aidBoardPosition))
+                        {
+                            break;
+                        }
+
+                        aidCell = &getBoardCell(aidBoardPosition);
+
+                        if (aidCell->pieceColor != CC_NONE)
+                        {
+                            if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                            {
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                }
+                break;
+                //------------------------------------------------------------------------------------
+                // QUEEN LOGIC
+                //------------------------------------------------------------------------------------
+            case PT_QUEEN:
+                for (int i = 0; i < 8; ++i)
+                {
+                    int df = queenDeltas[i][0];
+                    int dr = queenDeltas[i][1];
+
+                    aidBoardPosition = c.position;
+
+                    while (true)
+                    {
+                        aidBoardPosition.file += df;
+                        aidBoardPosition.rank += dr;
+
+                        if (!isBoardPositionValid(aidBoardPosition))
+                        {
+                            break;
+                        }
+                        aidCell = &getBoardCell(aidBoardPosition);
+
+                        if (aidCell->pieceColor != CC_NONE)
+                        {
+                            if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                            {
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                }
+                break;
+                //------------------------------------------------------------------------------------
+                // KING LOGIC
+                //------------------------------------------------------------------------------------
+            case PT_KING:
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    return false;
+}
+
+void MZBoard::setGameResult(GameResult result)
 {
     gameResult = result;
 }
 
-int MZBoard::getGameResult()
+GameResult MZBoard::getGameResult()
 {
     return gameResult;
 }
@@ -359,7 +532,7 @@ void MZBoard::initializeBoard(bool blitz)
     playerTime = (isBlitz) ? GAME_TIME_BLITZ : GAME_TIME_REGULAR;
     lastMove = PieceMove{BoardPosition{-1, -1}, BoardPosition{-1, -1}, MT_MOVE};
     fullTurn = 0;
-    gameResult = -1;
+    gameResult = GS_NONE;
     turnsToDraw = 50;
     playerCastling[0] = true;
     playerCastling[1] = true;
@@ -511,13 +684,13 @@ void MZBoard::processBoard()
                     aidCell = &getBoardCell(aidBoardPosition);
                     if (aidCell->pieceType == PT_NONE)
                     {
-                        if (aidCell->position.rank == 7)
+                        if (aidBoardPosition.rank == 7)
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_PROMOTE);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_PROMOTE);
                         }
                         else
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_MOVE);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_MOVE);
                         }
                     }
                 }
@@ -528,7 +701,7 @@ void MZBoard::processBoard()
                     aidCell = &getBoardCell(aidBoardPosition);
                     if (c.position.rank == 1 && aidCell->pieceType == PT_NONE)
                     {
-                        addMovementToPiece(c.position, aidCell->position, MT_DOUBLEMOVE);
+                        addMovementToPiece(c.position, aidBoardPosition, MT_DOUBLEMOVE);
                     }
                 }
                 // CHECK ATTACK/PROMOTE LEFT
@@ -539,18 +712,18 @@ void MZBoard::processBoard()
                     // CHECK EN PASSANT
                     if (lastMove.type == MT_DOUBLEMOVE && lastMove.target.file == aidCell->position.file && lastMove.target.rank == aidCell->position.rank - 1)
                     {
-                        addMovementToPiece(c.position, aidCell->position, MT_ENPASSANT);
+                        addMovementToPiece(c.position, aidBoardPosition, MT_ENPASSANT);
                     }
 
                     if (aidCell->pieceColor == CC_BLACK)
                     {
                         if (aidCell->position.rank == 7)
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_ATTACKPROMOTE);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_ATTACKPROMOTE);
                         }
                         else
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_ATTACK);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_ATTACK);
                         }
                     }
                 }
@@ -562,18 +735,18 @@ void MZBoard::processBoard()
                     // CHECK EN PASSANT
                     if (lastMove.type == MT_DOUBLEMOVE && lastMove.target.file == aidCell->position.file && lastMove.target.rank == aidCell->position.rank - 1)
                     {
-                        addMovementToPiece(c.position, aidCell->position, MT_ENPASSANT);
+                        addMovementToPiece(c.position, aidBoardPosition, MT_ENPASSANT);
                     }
 
                     if (aidCell->pieceColor == CC_BLACK)
                     {
                         if (aidCell->position.rank == 7)
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_ATTACKPROMOTE);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_ATTACKPROMOTE);
                         }
                         else
                         {
-                            addMovementToPiece(c.position, aidCell->position, MT_ATTACK);
+                            addMovementToPiece(c.position, aidBoardPosition, MT_ATTACK);
                         }
                     }
                 }
@@ -764,22 +937,24 @@ void MZBoard::processBoard()
                 // PAWN LOGIC
                 //------------------------------------------------------------------------------------
             case PT_PAWN:
-                // CHECK ATTACK/PROMOTE LEFT
-                aidBoardPosition = BoardPosition{c.position.file - 1, c.position.rank + 1};
-                if (isBoardPositionValid(aidBoardPosition))
-                {
-                    if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
-                    {
-                        addMovementToPiece(c.position, aidCell->position, MT_ATTACK);
-                    }
-                }
-                // CHECK ATTACK/PROMOTE RIGHT
+                // CHECK ATTACK LEFT
                 aidBoardPosition = BoardPosition{c.position.file - 1, c.position.rank - 1};
                 if (isBoardPositionValid(aidBoardPosition))
                 {
+                    aidCell = &getBoardCell(aidBoardPosition);
                     if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
                     {
-                        addMovementToPiece(c.position, aidCell->position, MT_ATTACK);
+                        addMovementToPiece(c.position, aidBoardPosition, MT_ATTACK);
+                    }
+                }
+                // CHECK ATTACK RIGHT
+                aidBoardPosition = BoardPosition{c.position.file + 1, c.position.rank - 1};
+                if (isBoardPositionValid(aidBoardPosition))
+                {
+                    aidCell = &getBoardCell(aidBoardPosition);
+                    if (aidCell->pieceColor == CC_WHITE && aidCell->pieceType == PT_KING)
+                    {
+                        addMovementToPiece(c.position, aidBoardPosition, MT_ATTACK);
                     }
                 }
                 break;

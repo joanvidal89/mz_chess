@@ -26,11 +26,12 @@ void MZAudio::loadResources()
     cancel = LoadSound("res/snd_cancel.ogg");
     victory = LoadSound("res/snd_victory.ogg");
     defeat = LoadSound("res/snd_defeat.ogg");
-    SetSoundVolume(hover, 0.2f);
-    SetSoundVolume(accept, 0.2f);
-    SetSoundVolume(cancel, 0.2f);
-    SetSoundVolume(victory, 0.2f);
-    SetSoundVolume(defeat, 0.2f);
+    SetSoundVolume(hover, 0.1f);
+    SetSoundVolume(accept, 0.1f);
+    SetSoundVolume(cancel, 0.1f);
+    SetSoundVolume(victory, 0.1f);
+    SetSoundVolume(defeat, 0.1f);
+    SetMusicVolume(music, 0.8f);
 }
 
 void MZAudio::switchMusicOn(bool on)
