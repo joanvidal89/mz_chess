@@ -1,4 +1,4 @@
-![poster](poster.PNG)
+![poster](https://github.com/joanvidal89/mz_chess/assets/161112464/e2985d84-4ff9-44b1-a6f2-988fbe33ac9f)
 
 <div style="page-break-after: always;"></div>
 
